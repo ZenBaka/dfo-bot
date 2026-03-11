@@ -30,8 +30,6 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
   const isCombatData = data as ICombatJSON;
   const isStepData = data as IStepJSON;
   const rewards = isStepData.rewards;
-  const levelsGained = rewards.levelsGained;
-  const gainedLevels = levelsGained >= 1;
 
   const showButtons =
     (isCombatData.combatEnded === false) ||  // Active combat (attack/flee result)
@@ -49,9 +47,9 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
         .setStyle(ButtonStyle.Secondary),
     );
     components.push(row);
-  } else if (gainedLevels) {
+  } else if (rewards.levelsGained >= 1) {
     const row = new ActionRowBuilder<ButtonBuilder>();
-    const points = levelsGained * 2;
+    const points = rewards.levelsGained * 2;
     row.addComponents(new ButtonBuilder().setCustomId(`skillpoints:${points}`).setLabel(`⭐ Spend Skillpoints ${points}`).setStyle(ButtonStyle.Secondary));
 
     components.push(row);
