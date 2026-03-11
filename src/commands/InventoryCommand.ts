@@ -9,6 +9,7 @@ import { formatError } from "../utilities/ErrorMessages";
 
 import ItemManager from "../managers/ItemManager";
 import ImageService from "../utilities/ImageService";
+import { buildItemView } from "../utilities/ItemViewBuilder";
 
 export default class InventoryCommand extends SlashCommand {
   constructor() {
@@ -116,57 +117,9 @@ export default class InventoryCommand extends SlashCommand {
         return;
       }
 
-      const imageBuffer = await ImageService.item(hydratedItem!);
-      const fileName = `inventory_item_${item.itemId}.png`;
-      const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
+      const viewer = await buildItemView(player, item);
 
-      const isWithinLevel = player.level >= hydratedItem.level;
-      const hasSlot = hydratedItem.slot !== 'None';
-      const isConsumable = hydratedItem.type === 'Consumable';
-      const isLocked = item.isLocked;
-
-      let equipText = 'Equip';
-      let sellText = `🪙 Sell Item: (${hydratedItem.value.toLocaleString()} Coins/ea x ${item.quantity}) ${Math.floor(hydratedItem.value * item.quantity).toLocaleString()} Coins`;
-      let collectionText = 'Add to Collection';
-
-      if (!isWithinLevel) equipText = `Required Level: ${hydratedItem.level.toLocaleString()}`;
-      if (!hasSlot) equipText = 'Cannot Equip';
-      if (isLocked) {
-        equipText = '🔒 Locked Item';
-        sellText = '🔒 Locked Item';
-        collectionText = '🔒 Locked Item';
-      }
-
-      let disabled = !isWithinLevel || !hasSlot || isLocked;
-      let style = disabled ? ButtonStyle.Secondary : ButtonStyle.Primary;
-      if (isConsumable) { disabled = false; style = ButtonStyle.Primary; }
-
-      const equipButton = new ButtonBuilder()
-        .setCustomId(isConsumable ? `consume:${item.itemId}:${item.quantity}` : `equip:${item.itemId}`)
-        .setLabel(isConsumable ? 'Consume' : equipText)
-        .setDisabled(disabled).setStyle(style);
-
-      const lockButton = new ButtonBuilder()
-        .setCustomId(`lock:${item.itemId}:${item.isLocked ? '1' : '0'}`)
-        .setLabel(item.isLocked ? '🔓 Unlock' : '🔒 Lock')
-        .setStyle(item.isLocked ? ButtonStyle.Success : ButtonStyle.Danger);
-
-      const sellButton = new ButtonBuilder()
-        .setCustomId(`sell:${item.itemId}:${item.quantity}`)
-        .setLabel(isConsumable ? 'Cannot Sell' : sellText)
-        .setStyle(isConsumable || isLocked ? ButtonStyle.Secondary : ButtonStyle.Success)
-        .setDisabled(isConsumable || isLocked);
-
-      const collectButton = new ButtonBuilder()
-        .setCustomId(`collect:${item.itemId}:${item.quantity}`)
-        .setLabel(isConsumable ? 'Cannot Collect' : collectionText)
-        .setStyle(isConsumable || isLocked ? ButtonStyle.Secondary : ButtonStyle.Primary)
-        .setDisabled(isConsumable || isLocked);
-
-      const row = new ActionRowBuilder<ButtonBuilder>().setComponents(equipButton, lockButton);
-      const row2 = new ActionRowBuilder<ButtonBuilder>().setComponents(sellButton, collectButton);
-
-      await interaction.editReply({ files: [attachment], components: [row, row2] });
+      await interaction.editReply(viewer);
     }
   }
 
