@@ -1,5 +1,7 @@
 import { ModalSubmitInteraction, Client } from "discord.js";
 import ModalSubmit from "../../structures/ModalSubmit";
+import { apiFetch } from "../../utilities/ApiClient";
+import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class CollectModal extends ModalSubmit {
@@ -7,48 +9,38 @@ export default class CollectModal extends ModalSubmit {
     super('collect');
   }
 
+  // customId format: collect:<docId>
   public async execute(interaction: ModalSubmitInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferUpdate();
 
-    const [itemId] = args!;
-    const discordId = interaction.user.id;
+    const docId = args?.[0];
     const amount = interaction.fields.getTextInputValue('ti1');
-
-    const parsedItemId = parseInt(itemId, 10);
     const parsedAmount = parseInt(amount, 10);
 
-    if (isNaN(parsedAmount) || isNaN(parsedItemId)) {
-      await interaction.editReply({ content: 'The amount or item id is not a valid number!', files: [], components: [], embeds: [] });
+    if (!docId || isNaN(parsedAmount)) {
+      await interaction.editReply({ content: 'Invalid input! Please try again.', files: [], components: [], embeds: [] });
       return;
     }
 
-    const res = await fetch(Routes.collectionAdd(), {
-      method: 'POST',
-      headers: Routes.HEADERS(),
-      body: JSON.stringify({ discordId, amount: parsedAmount, itemId: parsedItemId })
-    });
+    try {
+      const res = await apiFetch(Routes.collectionAdd(), {
+        method: 'POST',
+        body: JSON.stringify({ discordId: interaction.user.id, inventoryId: docId, amount: parsedAmount }),
+      });
 
-    const { success, message, newQuantity, error }: { success?: boolean, message?: string, newQuantity?: number, error?: string } = await res.json();
+      const { success, message, error } = await res.json();
 
-    if (res.status === 400 || res.status === 401 || res.status === 404 || res.status === 500) {
-      await interaction.editReply({ content: error ?? `Unknown error message (Code: ${res.status})`, components: [], files: [], embeds: [] });
-      return;
-    }
+      if (!res.ok || !success) {
+        await interaction.editReply({ content: formatError(error ?? 'Collection failed'), components: [], files: [], embeds: [] });
+        return;
+      }
 
-    if (success) {
-      await interaction.editReply({ content: message ?? 'Success, but can not fetch message!', components: [], files: [], embeds: [] });
-      return;
-    } else {
-      await interaction.editReply({ content: 'Unknown error!', components: [], files: [], embeds: [] });
-      return;
+      await interaction.editReply({ content: message ?? 'Items collected!', components: [], files: [], embeds: [] });
+    } catch (err: any) {
+      await interaction.editReply({ content: formatError(err.message, err.code), components: [], files: [], embeds: [] });
     }
   }
 
-  public isAuthorOnly(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 2;
-  }
+  public isAuthorOnly(): boolean { return true; }
+  public cooldown(): number { return 2; }
 }

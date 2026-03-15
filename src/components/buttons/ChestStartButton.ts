@@ -4,42 +4,36 @@ import { apiFetch } from "../../utilities/ApiClient";
 import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
-export default class LockButton extends Button {
+export default class ChestStartButton extends Button {
   constructor() {
-    super('lock');
+    super('chest_start');
   }
 
-  // customId format: lock:<docId>:<isLocked 0|1>
+  // customId format: chest_start:<chestId>
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferUpdate();
 
-    const docId = args?.[0];
-    const currentlyLocked = args?.[1] === '1';
-
-    if (!docId) {
-      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [] });
+    const chestId = args?.[0];
+    if (!chestId) {
+      await interaction.editReply({ content: 'Error parsing chest data!', files: [], components: [] });
       return;
     }
 
     try {
-      const res = await apiFetch(Routes.lock(), {
+      const res = await apiFetch(Routes.chests(), {
         method: 'POST',
-        body: JSON.stringify({
-          discordId: interaction.user.id,
-          inventoryId: docId,
-          isLocked: !currentlyLocked, // Toggle
-        }),
+        body: JSON.stringify({ discordId: interaction.user.id, action: 'start', chestId }),
       });
 
-      const { success, isLocked, error } = await res.json();
+      const body = await res.json();
 
-      if (!res.ok || !success) {
-        await interaction.editReply({ content: formatError(error ?? 'Lock failed'), files: [], components: [] });
+      if (!res.ok || !body.success) {
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to start unlock'), files: [], components: [] });
         return;
       }
 
       await interaction.editReply({
-        content: isLocked ? '🔒 Item locked!' : '🔓 Item unlocked!',
+        content: `⏳ **Chest unlocking!** It will be ready to open in **${body.unlockTime ?? 'a while'}**.\n\nRun \`/chests\` again later to open it.`,
         files: [], components: [],
       });
     } catch (err: any) {

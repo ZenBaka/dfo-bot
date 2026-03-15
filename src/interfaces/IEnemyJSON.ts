@@ -8,4 +8,12 @@ export interface IEnemyJSON {
   atk: number;
   def: number;
   difficultyRating: number;
-};
+  // NPCGenerator fields
+  rewardMult: number;
+  lootBonus: number;
+  prefixIcon: string;
+  isPrefixed: boolean;
+  isMythic: boolean;
+  isChampion: boolean;
+  isElite: boolean;
+}

@@ -6,28 +6,23 @@ export default class ConsumeButton extends Button {
     super('consume');
   }
 
+  // customId format: consume:<docId>:<maxQuantity>
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
-    const [itemId, quantity] = args!;
-    const parsedQuantity = parseInt(quantity, 10);
+    const docId = args?.[0];
+    const maxQty = args?.[1] ?? '1';
 
     const modal = new ModalBuilder()
       .setTitle('Consume Item')
-      .setCustomId(`consume:${itemId}`);
-
-    modal.addLabelComponents(
-      (label) =>
-        label.setLabel('Amount').setDescription(`Enter a valid number amount to consume (Max: ${parsedQuantity})`)
-        .setTextInputComponent((ti) => ti.setCustomId('ti1').setRequired(true).setStyle(TextInputStyle.Short))
-    );
+      .setCustomId(`consume:${docId}`)
+      .addLabelComponents(
+        (label) =>
+          label.setLabel('Amount').setDescription(`Enter amount to consume (Max: ${maxQty})`)
+          .setTextInputComponent((ti) => ti.setCustomId('ti1').setRequired(true).setStyle(TextInputStyle.Short))
+      );
 
     await interaction.showModal(modal);
   }
 
-  public isAuthorOnly(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 2;
-  }
+  public isAuthorOnly(): boolean { return true; }
+  public cooldown(): number { return 2; }
 }

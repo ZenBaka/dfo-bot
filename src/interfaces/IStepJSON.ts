@@ -13,14 +13,16 @@ export interface IStepJSON {
   cooldownRemaining?: number;
   enemy?: IEnemyJSON;
   inCombat?: boolean;
-};
+}
 
 export interface IStepRewardsJSON {
   xp: number;
   gold: number;
   item: IItemJSON | null;
   levelsGained: number;
-};
+  chestDrop: string | null;   // Chest tier found while exploring
+  toll: number;               // Zone toll deducted this step
+}
 
 export interface IActiveBonuses {
   critChance: number;
@@ -30,7 +32,8 @@ export interface IActiveBonuses {
   goldFind: number;
   xpBonus: number;
   thorns: number;
-};
+  cooldownReduction: number;
+}
 
 export interface IStepPlayerStatsJSON {
   hp: number;
@@ -40,4 +43,4 @@ export interface IStepPlayerStatsJSON {
   gold: number;
   expRequired: number;
   activeBonuses: IActiveBonuses;
-};
+}

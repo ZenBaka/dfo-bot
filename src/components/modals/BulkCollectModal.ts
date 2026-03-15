@@ -18,8 +18,11 @@ export default class BulkCollectModal extends ModalSubmit {
     }
 
     const items = selectedValues.map(val => {
-      const [id, amount] = val.split('-');
-      return { itemId: parseInt(id, 10), amount: parseInt(amount, 10) };
+      const parts = val.split('-');
+      if (parts.length >= 3) {
+        return { inventoryId: parts[0], itemId: parseInt(parts[1], 10), amount: parseInt(parts[2], 10) };
+      }
+      return { itemId: parseInt(parts[0], 10), amount: parseInt(parts[1], 10) };
     }).filter(i => !isNaN(i.itemId) && !isNaN(i.amount) && i.amount > 0);
 
     if (items.length === 0) {

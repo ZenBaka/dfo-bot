@@ -7,26 +7,29 @@ import PresenceManager from "../managers/PresenceManager";
 
 export default class ClientReadyEvent extends Event {
   constructor() {
-    // Note: If your event handler relies on the exact Discord.js event name, 
-    // make sure this is 'ready' instead of 'clientReady' if it doesn't trigger!
     super('clientReady'); 
   }
 
   public async execute(client: Client) {
-    const shardId = client.shard?.ids[0] ?? 0;
-    logger.info(`[${this.constructor.name}] Successfully logged in as ${client.user?.tag}! (Shard ${shardId})`);
+    // Use cluster id from hybrid sharding, fallback to shard id
+    const clusterId = (client as any).cluster?.id ?? client.shard?.ids[0] ?? 0;
+    logger.info(`[${this.constructor.name}] Successfully logged in as ${client.user?.tag}! (Cluster ${clusterId})`);
+
+    // CRITICAL: Signal to the ClusterManager that this cluster is ready
+    // Without this, the manager will timeout waiting for this cluster
+    (client as any).cluster?.triggerReady();
 
     // Initialize the image rendering worker pool
     WorkerPool.init();
 
-    // Stagger the API requests by 2.5 seconds per shard to prevent slamming capi.gg
-    const delayMs = 1500 + (shardId * 2500); 
+    // Stagger API requests by cluster ID to prevent slamming capi.gg
+    const delayMs = 1500 + (clusterId * 2500); 
     
     setTimeout(async () => {
-        logger.info(`[Shard ${shardId}] Initiating staggered ItemManager sync...`);
+        logger.info(`[Cluster ${clusterId}] Initiating staggered ItemManager sync...`);
         await ItemManager.refresh();
 
-        // Start rotating presence after items are loaded (stats are available)
+        // Start rotating presence after items are loaded
         await PresenceManager.init(client);
     }, delayMs);
   }

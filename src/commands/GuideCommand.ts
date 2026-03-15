@@ -1,182 +1,182 @@
-import { ChatInputCommandInteraction, Client, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, Client, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import SlashCommand from "../structures/SlashCommand";
-import PaginatorBuilder from "../utilities/PaginatorBuilder";
 
-const GUIDE_COLOR = 0x10b981;
+const SECTIONS: Record<string, { title: string; emoji: string; content: string }> = {
+  basics: {
+    title: 'Getting Started',
+    emoji: '📖',
+    content: [
+      '**Welcome to Dragon\'s Fall Online!**',
+      '',
+      '`/register` — Create your character',
+      '`/explore` — Take a step in your current zone. You may find gold, items, or enemies!',
+      '`/attack` — Attack an enemy in combat. `/flee` to escape.',
+      '`/profile` — View your character stats and equipment.',
+      '`/inventory` — Browse your items. Select one to equip, sell, collect, or enhance.',
+      '',
+      '**HP & Healing**',
+      '> HP regenerates passively — 10% of max HP every 5 minutes.',
+      '> Use `/rest` to heal instantly at an inn (costs gold).',
+      '> Consumable items can also restore HP.',
+      '> HP is fully restored on level up.',
+    ].join('\n'),
+  },
+  combat: {
+    title: 'Combat & Enemies',
+    emoji: '⚔️',
+    content: [
+      '**Combat triggers randomly while exploring.**',
+      '',
+      'Enemies can have **prefixes** that modify their power and rewards:',
+      '> 👑 **Champion** / 💀 **Mythic** — Very rare, very dangerous, huge rewards',
+      '> ⚡ **Elite** / 🔥 **Furious** — Strong enemies with bonus loot chance',
+      '> 💪 **Stout** / 🗡️ **Swift** — Moderate challenge',
+      '> 😰 **Weak** / 🦴 **Frail** — Easy kills, reduced rewards',
+      '',
+      '**Affixes** on your gear give combat bonuses:',
+      '> Crit Chance (cap: 75%) • Life Steal (cap: 25%) • Dodge (cap: 75%)',
+      '> Gold Find (cap: 100%) • XP Bonus (cap: 100%) • Thorns (flat damage)',
+    ].join('\n'),
+  },
+  workshop: {
+    title: 'Workshop — Enhance, Reforge, Dismantle',
+    emoji: '🔨',
+    content: [
+      '**Access the workshop from any item\'s detail view.**',
+      '',
+      '⬆️ **Enhance** — Increase an item\'s stats. Costs gold + embers.',
+      '> +1 to +5: Guaranteed success',
+      '> +6 to +10: Decreasing success chance (80% → 20%)',
+      '> Failed attempts consume resources. High-level failures may destroy the item.',
+      '> Enhanced items become unique variants — they split from stacks.',
+      '',
+      '🔄 **Reforge** — Reroll an item\'s stats and/or affixes. Costs gold.',
+      '> Stats: Reroll ATK/DEF/HP values',
+      '> Affixes: Reroll special effects',
+      '> Full: Reroll everything (costs more)',
+      '',
+      '🔥 **Dismantle** — Destroy items to earn **Embers**.',
+      '> Enhanced items return 50% of the embers invested in them.',
+      '> Embers are used for enhancement and other upgrades.',
+    ].join('\n'),
+  },
+  economy: {
+    title: 'Economy & Gold Sinks',
+    emoji: '🪙',
+    content: [
+      '**Gold Sources:** Combat kills, exploration, selling items, task rewards.',
+      '**Gold Sinks:** Enhancement, reforging, rest at inn, zone tolls, market tax, chest shop.',
+      '',
+      '**Zone Tolls**',
+      '> Zones 7+ charge gold per step. Higher zones charge more.',
+      '> Greenleaf Meadow through Sunken Grotto are free.',
+      '> The Absolute (Zone 20) costs 1,200g per step.',
+      '',
+      '**Market** (`/market`)',
+      '> List items for other players to buy. 5% tax on sales.',
+      '> Enhanced items can be listed and their stats are shown to buyers.',
+      '> Modified items cannot be vendor-sold — use the market or dismantle.',
+      '',
+      '**Collection** (`/inventory` → Collect)',
+      '> ⚠️ Permanent action! Items are removed from inventory.',
+      '> Hit milestones for gold, XP, embers, and chests.',
+      '> Modified items cannot be collected.',
+    ].join('\n'),
+  },
+  tasks: {
+    title: 'Tasks & Chests',
+    emoji: '📋',
+    content: [
+      '**Tasks** (`/tasks`)',
+      '> Daily, Weekly, and Monthly objectives.',
+      '> Earn gold, XP, and embers by completing them.',
+      '> Tasks reset on their respective timers.',
+      '',
+      '**Chests** (`/chests`)',
+      '> Earn chests from exploring, milestones, or buy from the shop.',
+      '> Some chests unlock instantly; others take time.',
+      '> Open chests for items, gold, and embers.',
+      '> **Divine Pity**: After opening many chests without a Divine drop, one is guaranteed.',
+    ].join('\n'),
+  },
+  zones: {
+    title: 'Zones & Travel',
+    emoji: '🗺️',
+    content: [
+      '**Use `/travel` to move between zones.**',
+      '',
+      'Each zone has:',
+      '> **Level Requirement** — Must be high enough level to enter',
+      '> **Rarity Cap** — Maximum item rarity that can drop',
+      '> **Difficulty Scalar** — Enemy stat multiplier',
+      '> **Toll Cost** — Gold charged per step (Zones 7+)',
+      '',
+      'Higher zones have tougher enemies but better rewards and rarer drops.',
+      'Zone XP multipliers are capped at 3.0× to prevent runaway leveling.',
+    ].join('\n'),
+  },
+};
 
-function buildPages(): EmbedBuilder[] {
-  const pages: EmbedBuilder[] = [];
-
-  // --- PAGE 1: Getting Started ---
-  pages.push(new EmbedBuilder()
-    .setColor(GUIDE_COLOR)
-    .setTitle('⚔️ Dragon\'s Fall Online — Player Guide')
-    .setDescription(
-      '**Welcome, Adventurer!**\n\n' +
-      'Dragon\'s Fall Online is a text-based MMORPG where you explore zones, fight enemies, collect loot, and grow your character. Everything syncs between Discord and the [web dashboard](https://capi.gg/dfo).\n\n' +
-      '**Quick Start:**\n' +
-      '> 1. `/register` — Create your character\n' +
-      '> 2. `/explore` — Take a step in your current zone\n' +
-      '> 3. `/inventory` — Manage gear and equip items\n' +
-      '> 4. `/profile` — View stats and spend skill points\n' +
-      '> 5. `/travel` — Move to harder zones as you level up\n\n' +
-      '**Core Loop:** Explore → Find loot/enemies → Equip better gear → Travel to harder zones → Repeat'
-    )
-  );
-
-  // --- PAGE 2: Exploration & Zones ---
-  pages.push(new EmbedBuilder()
-    .setColor(GUIDE_COLOR)
-    .setTitle('🗺️ Exploration & Zones')
-    .setDescription(
-      'Each time you `/explore`, one of three things happens based on your zone\'s encounter rates:\n\n' +
-      '**⚔️ Combat Encounter** — An enemy spawns. You must `/attack` or `/flee`.\n' +
-      '**🎒 Item Drop** — You find an item on the ground (added to inventory).\n' +
-      '**🌿 Safe Travel** — You gain XP and gold passively.\n\n' +
-      'Higher-tier zones have more combat and better loot, but enemies are tougher.\n\n' +
-      '**Zone Tiers:**\n' +
-      '> Tier 1 (Lvl 1-20) — The Apprentice: Low combat, high XP to help you grow\n' +
-      '> Tier 2 (Lvl 25-75) — The Adventurer: Balanced risk and reward\n' +
-      '> Tier 3 (Lvl 100-200) — The Hero: Legendary rarity drops unlock\n' +
-      '> Tier 4 (Lvl 250-500) — The Ascendant: +25% to +40% enemy stats\n' +
-      '> Tier 5 (Lvl 500-1000) — The Cosmic: Nightmare difficulty\n\n' +
-      '**Out-leveling a zone?** If you\'re 5+ levels above a zone\'s max level, XP and gold from safe travel drops to nearly zero. Move on!'
-    )
-  );
-
-  // --- PAGE 3: Combat Mechanics ---
-  pages.push(new EmbedBuilder()
-    .setColor(0xef4444)
-    .setTitle('⚔️ Combat Mechanics')
-    .setDescription(
-      '**Damage Formula:**\n' +
-      '```\nDamage = ATK × variance(0.9-1.1) × 1.2 × critMult × mitigation\n```\n' +
-      '**Mitigation (Defense):**\n' +
-      '```\nReduction = DEF / (DEF + enemyLevel^1.15 × 8)\nCapped at 85% reduction\n```\n' +
-      'This means defense has diminishing returns — you can never fully negate damage, but high DEF still makes a huge difference.\n\n' +
-      '**Critical Hits:**\n' +
-      '> Base crit chance: 5% • Base crit damage: 150% (1.5×)\n' +
-      '> Both can be increased through item affixes\n\n' +
-      '**Dodge:**\n' +
-      '> Base: 0% (affix only) • Capped at 75%\n' +
-      '> Penalty: If the enemy is higher level, dodge is reduced by 5% per level gap\n\n' +
-      '**Enemy Prefixes:**\n' +
-      '> `Weak` — 0.8× rewards\n' +
-      '> `Furious / Giant / Armored` — 1.4× rewards\n' +
-      '> `Elite` — 1.65× rewards (hardest, most rewarding)'
-    )
-  );
-
-  // --- PAGE 4: Stats & Leveling ---
-  pages.push(new EmbedBuilder()
-    .setColor(0xeab308)
-    .setTitle('📊 Stats & Leveling')
-    .setDescription(
-      '**Base Stats:**\n' +
-      '> **HP** = 50 + ((level - 1) × 5) + equipment HP\n' +
-      '> **ATK** = Base ATK (from skill points) + equipment ATK\n' +
-      '> **DEF** = Base DEF (from skill points) + equipment DEF\n\n' +
-      '**Leveling Up:**\n' +
-      '```\nXP Required = floor(50 × level^1.3)\n```\n' +
-      '> Level 5 → 430 XP | Level 10 → 997 XP | Level 50 → 9,125 XP\n' +
-      '> Each level grants **+2 skill points** to allocate into ATK or DEF\n' +
-      '> HP is fully restored on level up\n\n' +
-      '**Skill Points:**\n' +
-      '> View your profile with `/profile` and tap **Spend Skill Points** if you have unspent points\n' +
-      '> Choose between ATK (more damage) or DEF (more survivability)\n' +
-      '> This is permanent — choose wisely!\n\n' +
-      '**Tip:** A balanced build (roughly 60/40 ATK/DEF) works well for most content. Pure ATK builds can struggle in high-tier zones where enemies hit hard.'
-    )
-  );
-
-  // --- PAGE 5: Items & Affixes ---
-  pages.push(new EmbedBuilder()
-    .setColor(0x9b59b6)
-    .setTitle('🎒 Items, Rarity & Affixes')
-    .setDescription(
-      '**Rarity Tiers (from most to least common):**\n' +
-      '> ⬜ Common (60%) → 🟢 Uncommon (25%) → 🔵 Rare (10%) → 🟠 Elite (3.5%)\n' +
-      '> 🟣 Epic (1.3%) → 🟡 Legendary (0.19%) → 🔷 Divine (0.01%)\n\n' +
-      '**Item Types:**\n' +
-      '> Weapons, Armor, Accessories — Equippable gear with stats\n' +
-      '> Consumables — Heal HP, grant XP, or grant gold (one-time use)\n' +
-      '> Materials & Collectibles — Sell for gold or add to your collection\n\n' +
-      '**Affixes** are bonus modifiers found on equipment:\n' +
-      '> ⚡ **Crit Chance** — Increases critical hit probability\n' +
-      '> 💥 **Crit Damage** — Increases critical hit multiplier\n' +
-      '> 💨 **Dodge** — Chance to avoid enemy attacks entirely\n' +
-      '> 🩸 **Life Steal** — Heal for a % of damage dealt\n' +
-      '> 🪙 **Gold Find** — Bonus % gold from all sources\n' +
-      '> ✨ **XP Bonus** — Bonus % XP from all sources\n' +
-      '> 🔥 **Thorns** — Flat damage reflected back to attacker\n\n' +
-      '**Tip:** Higher difficulty zones increase the drop weight of rare items. The `difficultyScalar` boosts rare+ weights and reduces common drops.'
-    )
-  );
-
-  // --- PAGE 6: Economy & Market ---
-  pages.push(new EmbedBuilder()
-    .setColor(0xf59e0b)
-    .setTitle('🏪 Economy & Market')
-    .setDescription(
-      '**Gold Sources:**\n' +
-      '> Safe travel (passive) • Killing enemies • Selling items\n\n' +
-      '**Gold Sinks:**\n' +
-      '> Buying from the Global Market\n\n' +
-      '**Global Market** (`/market`):\n' +
-      '> `/market browse` — Search listings with filters (rarity, type, price)\n' +
-      '> `/market sell <item> <qty> <price>` — List items for other players\n' +
-      '> `/market listings` — View and cancel your active listings\n\n' +
-      '**Bulk Actions** (`/inventory`):\n' +
-      '> Bulk Sell — Sell multiple items at once for their base value\n' +
-      '> Bulk Collect — Archive multiple items into your collection book\n\n' +
-      '**Collection Book** (`/collection`):\n' +
-      '> Collect every unique item in the game. Items are removed from inventory and permanently archived. Great for clearing inventory while preserving a record of your finds.\n\n' +
-      '**Tip:** Check the market before selling rare items to NPCs — other players may pay significantly more than the base sell value.'
-    )
-  );
-
-  // --- PAGE 7: Do's and Don'ts ---
-  pages.push(new EmbedBuilder()
-    .setColor(0x3b82f6)
-    .setTitle('✅ Do\'s and ❌ Don\'ts')
-    .setDescription(
-      '**✅ DO:**\n' +
-      '> Lock valuable items so you don\'t accidentally sell them\n' +
-      '> Equip gear close to your level — underleveled gear gives weak stats\n' +
-      '> Move to new zones when you out-level your current one\n' +
-      '> Spend skill points as you get them — unspent points are wasted potential\n' +
-      '> Use `/flee` if an enemy is too strong — dying costs progress\n' +
-      '> Check the market for upgrades before entering harder zones\n\n' +
-      '**❌ DON\'T:**\n' +
-      '> Don\'t stay in a low zone for too long — XP penalties kick in at 5+ levels over the zone cap\n' +
-      '> Don\'t sell everything — some items are worth more on the market\n' +
-      '> Don\'t ignore defense entirely — high ATK means nothing if you die in one hit\n' +
-      '> Don\'t use automation or macros — this results in a permanent ban and data wipe\n' +
-      '> Don\'t attempt to RMT (sell items for real money) — zero tolerance policy'
-    )
-  );
-
-  return pages;
-}
+const SECTION_ORDER = ['basics', 'combat', 'workshop', 'economy', 'tasks', 'zones'];
 
 export default class GuideCommand extends SlashCommand {
   constructor() {
-    super('guide', 'A comprehensive guide to playing Dragon\'s Fall Online', 'General');
+    super('guide', 'View the DFO game guide', 'General');
+    this.data.addStringOption((o) =>
+      o.setName('section')
+        .setDescription('Jump to a specific section')
+        .setRequired(false)
+        .addChoices(
+          ...SECTION_ORDER.map(key => ({
+            name: `${SECTIONS[key].emoji} ${SECTIONS[key].title}`,
+            value: key,
+          }))
+        )
+    );
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
-    await interaction.deferReply();
+    const section = interaction.options.getString('section') ?? 'basics';
+    const data = SECTIONS[section] || SECTIONS.basics;
 
-    const pages = buildPages();
+    const embed = new EmbedBuilder()
+      .setColor(0x10b981)
+      .setTitle(`${data.emoji} ${data.title}`)
+      .setDescription(data.content)
+      .setFooter({ text: `DFO Guide • Use /guide <section> to jump to a topic` });
 
-    const paginator = new PaginatorBuilder()
-      .setPages(pages)
-      .setTargetUser(interaction.user.id)
-      .setIdleTimeout(180_000); // 3 minutes for reading
+    // Section navigation buttons
+    const currentIdx = SECTION_ORDER.indexOf(section);
+    const navRow = new ActionRowBuilder<ButtonBuilder>();
 
-    await paginator.start(interaction);
+    if (currentIdx > 0) {
+      const prevKey = SECTION_ORDER[currentIdx - 1];
+      const prev = SECTIONS[prevKey];
+      navRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`guide_nav:${prevKey}`)
+          .setLabel(`◀ ${prev.title}`)
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+
+    if (currentIdx < SECTION_ORDER.length - 1) {
+      const nextKey = SECTION_ORDER[currentIdx + 1];
+      const next = SECTIONS[nextKey];
+      navRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`guide_nav:${nextKey}`)
+          .setLabel(`${next.title} ▶`)
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+
+    await interaction.reply({
+      embeds: [embed],
+      components: navRow.components.length > 0 ? [navRow] : [],
+    });
   }
 
   public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
+  public cooldown(): number { return 3; }
 }

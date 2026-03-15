@@ -5,7 +5,6 @@ import { IItemJSON } from '../interfaces/IItemJSON';
 import ItemManager from '../managers/ItemManager';
 import { join } from 'path';
 
-// Load OS-agnostic emoji font
 try { GlobalFonts.registerFromPath(join(process.cwd(), 'assets', 'NotoColorEmoji-Regular.ttf'), 'NotoEmoji'); } catch(e) {}
 
 const RARITY_COLORS: Record<string, string> = {
@@ -31,18 +30,11 @@ function getItemIcon(item: any) {
 }
 
 export default class InventoryImageBuilder {
-  /**
-   * Build an inventory grid image.
-   * @param chunk      - Slice of inventory items for this page
-   * @param player     - Player data from the API
-   * @param itemCache  - Optional item lookup map. If omitted, falls back to ItemManager (main thread only).
-   */
   public static async build(
     chunk: IInventoryItem[],
     player: IPlayerJSON,
     itemCache?: Record<number, IItemJSON>
   ): Promise<Buffer> {
-    // Resolve item lookup: use provided cache if available, otherwise fall back to ItemManager
     const getItem = (id: number): IItemJSON | undefined => {
       if (itemCache) return itemCache[id];
       return ItemManager.get(id);
@@ -51,7 +43,7 @@ export default class InventoryImageBuilder {
     const canvas = createCanvas(900, 720);
     const ctx = canvas.getContext('2d');
 
-    // 1. Background
+    // Background
     ctx.fillStyle = '#111111';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -61,28 +53,21 @@ export default class InventoryImageBuilder {
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvas.width, 200);
 
-    // 2. Header
+    // Header
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
-
-    // 1. Draw the emoji explicitly using the NotoEmoji font
     ctx.font = '32px "NotoEmoji", sans-serif';
     ctx.fillText('💼', 40, 60);
-
-    // 2. Switch back to standard font for the alphabetical text
     ctx.font = 'bold 32px sans-serif';
-    const titleText = `${player.username.toUpperCase()}'S INVENTORY`;
-    // Start at X: 85 to leave room for the briefcase, and cap width at 500px to prevent overlap
-    ctx.fillText(titleText, 85, 60, 500);
+    ctx.fillText(`${player.username.toUpperCase()}'S INVENTORY`, 85, 60, 500);
 
-    // 3. Draw the Player Stats (Level & Gold)
     ctx.fillStyle = '#10b981';
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'right';
     const goldFormatted = new Intl.NumberFormat('en-US').format(player.coins || 0);
     ctx.fillText(`LVL ${player.level}  •  ${goldFormatted} GOLD`, 860, 55);
 
-    // Header divider line
+    // Divider
     ctx.beginPath();
     ctx.moveTo(40, 80);
     ctx.lineTo(860, 80);
@@ -90,7 +75,7 @@ export default class InventoryImageBuilder {
     ctx.strokeStyle = '#ffffff1a';
     ctx.stroke();
 
-    // 3. Grid Settings (5 cols x 3 rows = 15 items)
+    // Grid (5 cols x 3 rows = 15 items)
     const startX = 40;
     const startY = 110;
     const boxW = 150;
@@ -118,8 +103,9 @@ export default class InventoryImageBuilder {
 
         if (itemData) {
             const color = RARITY_COLORS[itemData.rarity] || '#ffffff';
+            const enhanceLevel = invEntry.enhanceLevel || 0;
 
-            // Top Left: Lock Icon (Reverted back to original)
+            // Top Left: Lock Icon
             if (invEntry.isLocked) {
                 ctx.fillStyle = '#ffffff';
                 ctx.font = '14px "NotoEmoji", sans-serif';
@@ -127,12 +113,31 @@ export default class InventoryImageBuilder {
                 ctx.fillText('🔒', boxX + 10, boxY + 25);
             }
 
+            // Top Left (after lock): Enhancement Badge
+            if (enhanceLevel > 0) {
+                const badgeX = invEntry.isLocked ? boxX + 30 : boxX + 8;
+                const badgeText = `+${enhanceLevel}`;
+                ctx.font = 'bold 10px sans-serif';
+                const badgeW = ctx.measureText(badgeText).width + 8;
+                
+                ctx.fillStyle = '#92400e88'; // amber-900/50
+                ctx.beginPath();
+                ctx.roundRect(badgeX, boxY + 10, badgeW, 16, 3);
+                ctx.fill();
+                ctx.strokeStyle = '#f59e0b66';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#fbbf24';
+                ctx.textAlign = 'center';
+                ctx.fillText(badgeText, badgeX + badgeW / 2, boxY + 22);
+            }
+
             // Top Right: Quantity Pill
             ctx.fillStyle = '#00000099';
             ctx.beginPath();
             ctx.roundRect(boxX + boxW - 40, boxY + 10, 30, 18, 4);
             ctx.fill();
-            
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 10px sans-serif';
             ctx.textAlign = 'center';
@@ -150,20 +155,22 @@ export default class InventoryImageBuilder {
             ctx.roundRect(boxX, boxY + 110, boxW, 70, [0, 0, 12, 12]); 
             ctx.fill();
 
-            // Item Name (Shifted slightly up)
+            // Item Name (with +level suffix if enhanced)
             ctx.fillStyle = color;
             ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(itemData.name, boxX + boxW / 2, boxY + 132, boxW - 10);
+            const displayName = enhanceLevel > 0 ? `${itemData.name} +${enhanceLevel}` : itemData.name;
+            ctx.fillText(displayName, boxX + boxW / 2, boxY + 132, boxW - 10);
 
-            // Type & Level (Shifted slightly up)
-            ctx.fillStyle = '#6b7280'; // text-gray-500
+            // Type & Level
+            ctx.fillStyle = '#6b7280';
             ctx.font = '10px sans-serif';
             ctx.fillText(`${itemData.type.toUpperCase()}  |  LVL ${itemData.level}`, boxX + boxW / 2, boxY + 148);
 
-            // Item ID (NEW: Bottom line)
-            ctx.fillStyle = '#4b5563'; // text-gray-600 (slightly darker for subtlety)
-            ctx.font = '10px monospace';
-            ctx.fillText(`ID: ${itemData.itemId}`, boxX + boxW / 2, boxY + 164);
+            // Value
+            ctx.fillStyle = '#eab308';
+            ctx.font = '10px sans-serif';
+            const totalValue = Math.floor((itemData.value || 0) * invEntry.quantity);
+            ctx.fillText(`${totalValue.toLocaleString()}g`, boxX + boxW / 2, boxY + 164);
 
             // Bottom Rarity Border
             ctx.beginPath();
@@ -173,7 +180,6 @@ export default class InventoryImageBuilder {
             ctx.strokeStyle = color;
             ctx.stroke();
         } else {
-            // Unknown Item Fallback
             ctx.fillStyle = '#374151';
             ctx.font = 'italic 12px sans-serif';
             ctx.textAlign = 'center';

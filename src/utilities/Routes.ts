@@ -4,6 +4,8 @@ export default class Routes {
     'Content-Type': 'application/json'
   });
 
+  // ========== PLAYER ==========
+
   public static player(userId: string): string {
     return `https://capi.gg/api/bot/player/${userId}`;
   }
@@ -11,6 +13,8 @@ export default class Routes {
   public static registerPlayer(): string {
     return 'https://capi.gg/api/bot/player/register';
   }
+
+  // ========== INVENTORY ==========
 
   public static inventory(userId: string): string {
     return `https://capi.gg/api/bot/player/inventory/${userId}/all`;
@@ -20,6 +24,8 @@ export default class Routes {
     return `https://capi.gg/api/bot/player/inventory/${userId}/${itemId}`;
   }
 
+  // ========== ITEMS ==========
+
   public static item(itemId: number): string {
     return `https://capi.gg/api/bot/items/${itemId}`;
   }
@@ -27,6 +33,8 @@ export default class Routes {
   public static items(): string {
     return 'https://capi.gg/api/bot/items/all';
   }
+
+  // ========== SCENARIOS ==========
 
   public static scenario(scenarioId: number): string {
     return `https://capi.gg/api/bot/scenarios/${scenarioId}`;
@@ -36,6 +44,8 @@ export default class Routes {
     return 'https://capi.gg/api/bot/scenarios/all';
   }
 
+  // ========== NPCS ==========
+
   public static npc(npcId: number): string {
     return `https://capi.gg/api/bot/npcs/${npcId}`;
   }
@@ -43,6 +53,8 @@ export default class Routes {
   public static npcs(): string {
     return `https://capi.gg/api/bot/npcs/all`;
   }
+
+  // ========== INVENTORY ACTIONS ==========
 
   public static equip(): string {
     return 'https://capi.gg/api/inventory/equip';
@@ -64,9 +76,23 @@ export default class Routes {
     return 'https://capi.gg/api/inventory/sell';
   }
 
+  public static enhance(): string {
+    return 'https://capi.gg/api/inventory/enhance';
+  }
+
+  public static reforge(): string {
+    return 'https://capi.gg/api/inventory/reforge';
+  }
+
+  public static dismantle(): string {
+    return 'https://capi.gg/api/inventory/dismantle';
+  }
+
   public static collectionAdd(): string {
     return 'https://capi.gg/api/collection/add';
   }
+
+  // ========== ADVENTURE ==========
 
   public static explore(): string {
     return 'https://capi.gg/api/adventure/step';
@@ -76,15 +102,39 @@ export default class Routes {
     return 'https://capi.gg/api/adventure/combat';
   }
 
+  public static rest(): string {
+    return 'https://capi.gg/api/adventure/rest';
+  }
+
+  public static travel(): string {
+    return 'https://capi.gg/api/adventure/travel';
+  }
+
+  // ========== TASKS ==========
+
+  public static tasks(): string {
+    return 'https://capi.gg/api/tasks';
+  }
+
+  // ========== CHESTS ==========
+
+  public static chests(): string {
+    return 'https://capi.gg/api/chests';
+  }
+
+  // ========== LEADERBOARD ==========
+
   public static leaderboard(stat: string): string {
     return `https://capi.gg/api/bot/leaderboard?stat=${stat}`;
   }
+
+  // ========== TELEMETRY ==========
 
   public static telemetry(): string {
     return 'https://capi.gg/api/telemetry/db-stats';
   }
 
-  // --- Market ---
+  // ========== MARKET ==========
 
   public static marketBrowse(discordId: string, params?: { page?: number, search?: string, rarity?: string, type?: string, sort?: string }): string {
     const base = `https://capi.gg/api/market?discordId=${discordId}&limit=8`;
@@ -118,15 +168,13 @@ export default class Routes {
     return `https://capi.gg/api/market/trend?itemId=${itemId}`;
   }
 
-  public static travel(): string {
-    return 'https://capi.gg/api/adventure/travel';
-  }
+  // ========== PROFILE ==========
 
   public static allocate(): string {
     return 'https://capi.gg/api/profile/allocate';
   }
 
-  // --- Bulk Operations ---
+  // ========== BULK OPERATIONS ==========
 
   public static bulkSell(): string {
     return 'https://capi.gg/api/inventory/bulk-sell';
@@ -134,5 +182,9 @@ export default class Routes {
 
   public static bulkCollect(): string {
     return 'https://capi.gg/api/collection/bulk-add';
+  }
+
+  public static bulkDismantle(): string {
+    return 'https://capi.gg/api/inventory/bulk-dismantle';
   }
 }

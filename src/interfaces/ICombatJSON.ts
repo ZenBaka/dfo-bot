@@ -12,6 +12,7 @@ export interface ICombatJSON {
     xp: number;
     gold: number;
     item: IItemJSON | null;
+    levelsGained: number;
   };
   error?: string;
 };

@@ -1,5 +1,7 @@
 import { ModalSubmitInteraction, Client } from "discord.js";
 import ModalSubmit from "../../structures/ModalSubmit";
+import { apiFetch } from "../../utilities/ApiClient";
+import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class ConsumeModal extends ModalSubmit {
@@ -7,50 +9,38 @@ export default class ConsumeModal extends ModalSubmit {
     super('consume');
   }
 
+  // customId format: consume:<docId>
   public async execute(interaction: ModalSubmitInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferUpdate();
 
-    const [itemId] = args!;
-    const parsedId = parseInt(itemId, 10);
-    const discordId = interaction.user.id;
-
+    const docId = args?.[0];
     const amount = interaction.fields.getTextInputValue('ti1');
     const parsedAmount = parseInt(amount, 10);
 
-    if (isNaN(parsedAmount)) {
-      await interaction.editReply({ content: 'Invalid numerical input for the amount! Please try again!' });
+    if (!docId || isNaN(parsedAmount)) {
+      await interaction.editReply({ content: 'Invalid input! Please try again.' });
       return;
     }
 
-    const res = await fetch(Routes.consume(), {
-      method: 'POST',
-      headers: Routes.HEADERS(),
-      body: JSON.stringify({ discordId, itemId: parsedId, amount: parsedAmount })
-    });
+    try {
+      const res = await apiFetch(Routes.consume(), {
+        method: 'POST',
+        body: JSON.stringify({ discordId: interaction.user.id, inventoryId: docId, amount: parsedAmount }),
+      });
 
-    // if (!res.ok) throw Error('API Error!');
+      const { success, message, error } = await res.json();
 
-    const { success, message, error }: { success?: boolean, message?: string, error?: string } = await res.json();
+      if (!res.ok || !success) {
+        await interaction.editReply({ content: formatError(error ?? 'Consume failed'), files: [], components: [], embeds: [] });
+        return;
+      }
 
-    if (res.status === 400 || res.status === 401 || res.status === 404 || res.status === 500) {
-      await interaction.editReply({ content: error ?? 'Error Fetch', files: [], components: [], embeds: [] });
-      return;
-    }
-
-    if (success) {
-      await interaction.editReply({ content: message ?? 'Success but could not fetch message', components: [], files: [], embeds: [] });
-      return;
-    } else {
-      await interaction.editReply({ content: 'Unknown error!', components: [], files: [], embeds: [] });
-      return;
+      await interaction.editReply({ content: message ?? 'Item consumed!', components: [], files: [], embeds: [] });
+    } catch (err: any) {
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 
-  public isAuthorOnly(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 3;
-  }
+  public isAuthorOnly(): boolean { return true; }
+  public cooldown(): number { return 3; }
 }

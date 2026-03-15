@@ -1,6 +1,8 @@
 import { ActionRowBuilder, AnySelectMenuInteraction, AttachmentBuilder, Client, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import SelectMenu from "../../structures/SelectMenu";
 import Routes from "../../utilities/Routes";
+import { apiFetch } from "../../utilities/ApiClient";
+import { formatError } from "../../utilities/ErrorMessages";
 import { IPlayerJSON } from "../../interfaces/IPlayerJSON";
 import ImageService from "../../utilities/ImageService";
 import { EquipmentSlot } from "../../interfaces/IItemJSON";
@@ -17,23 +19,20 @@ export default class UnequipMenu extends SelectMenu {
     const discordId = interaction.user.id;
     const extraMenu: ActionRowBuilder<StringSelectMenuBuilder>[] = [];
 
-    const res = await fetch(Routes.unequip(), {
+    const res = await apiFetch(Routes.unequip(), {
       method: 'POST',
-      headers: Routes.HEADERS(),
       body: JSON.stringify({ discordId, slot })
     });
 
     const { success, error, player }: { success?: boolean, error?: string, player?: IPlayerJSON } = await res.json();
 
     if (res.status === 400 || res.status === 401 || res.status === 404 || res.status === 500) {
-      await interaction.editReply({ content: error ?? `Could not fetch error message (Code: ${res.status})`, files: [], components: [], embeds: [] });
+      await interaction.editReply({ content: formatError(error ?? `Unequip failed (Code: ${res.status})`), files: [], components: [], embeds: [] });
       return;
     }
 
     if (success) {
       const profile = await ImageService.profile(player!, interaction.user);
-
-      // 2. Turn the buffer into a Discord Attachment
       const profileAttachment = new AttachmentBuilder(profile, { name: 'profile.png' });
 
       if (player!.id === interaction.user.id) {
@@ -58,9 +57,8 @@ export default class UnequipMenu extends SelectMenu {
         extraMenu.push(new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(menu));
       }
 
-      // 4. Send the attachment and the components together!
       await interaction.editReply({
-        files: [profileAttachment], // Attach the image
+        files: [profileAttachment],
         components: extraMenu,
       });
     } else {

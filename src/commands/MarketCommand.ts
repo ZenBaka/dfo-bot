@@ -1,6 +1,7 @@
 import {
   ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle,
   ChatInputCommandInteraction, Client, EmbedBuilder, MessageFlags,
+  StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
 } from "discord.js";
 import SlashCommand from "../structures/SlashCommand";
 import { apiFetch } from "../utilities/ApiClient";
@@ -8,13 +9,15 @@ import { formatError } from "../utilities/ErrorMessages";
 import Routes from "../utilities/Routes";
 import { type MarketListing, type MarketPageConfig } from "../utilities/MarketImageBuilder";
 import ImageService from "../utilities/ImageService";
+import ItemManager from "../managers/ItemManager";
+import type { IInventoryItem } from "../interfaces/IInventoryJSON";
 
 const RARITY_CHOICES = [
   { name: 'All', value: 'All' },
   { name: 'Common', value: 'Common' }, { name: 'Uncommon', value: 'Uncommon' },
   { name: 'Rare', value: 'Rare' }, { name: 'Elite', value: 'Elite' },
   { name: 'Epic', value: 'Epic' }, { name: 'Legendary', value: 'Legendary' },
-  { name: 'Divine', value: 'Divine' },
+  { name: 'Divine', value: 'Divine' }, { name: 'Exotic', value: 'Exotic' },
 ];
 
 const SORT_CHOICES = [
@@ -22,6 +25,9 @@ const SORT_CHOICES = [
   { name: 'Price: Low → High', value: 'price_asc' },
   { name: 'Price: High → Low', value: 'price_desc' },
   { name: 'Level: High → Low', value: 'level_desc' },
+  { name: 'Highest ATK', value: 'atk_desc' },
+  { name: 'Highest DEF', value: 'def_desc' },
+  { name: 'Highest HP', value: 'hp_desc' },
 ];
 
 const TYPE_CHOICES = [
@@ -29,6 +35,8 @@ const TYPE_CHOICES = [
   { name: 'Weapon', value: 'Weapon' }, { name: 'Armor', value: 'Armor' },
   { name: 'Accessory', value: 'Accessory' }, { name: 'Consumable', value: 'Consumable' },
 ];
+
+export const SELL_PAGE_SIZE = 25;
 
 export default class MarketCommand extends SlashCommand {
   constructor() {
@@ -49,10 +57,7 @@ export default class MarketCommand extends SlashCommand {
       )
       .addSubcommand((sub) =>
         sub.setName('sell')
-          .setDescription('List one of your items on the market')
-          .addIntegerOption((o) => o.setName('item').setDescription('Item ID from your inventory').setRequired(true).setMinValue(1))
-          .addIntegerOption((o) => o.setName('quantity').setDescription('Amount to list').setMinValue(1).setRequired(true))
-          .addIntegerOption((o) => o.setName('price').setDescription('Price per unit in gold').setMinValue(1).setRequired(true))
+          .setDescription('Select an item from your inventory to list on the market')
       );
   }
 
@@ -67,7 +72,6 @@ export default class MarketCommand extends SlashCommand {
     }
   }
 
-  // --- BROWSE ---
   private async handleBrowse(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
     await interaction.deferReply();
 
@@ -93,9 +97,7 @@ export default class MarketCommand extends SlashCommand {
       const attachment = new AttachmentBuilder(imageBuffer, { name: 'market.png' });
       const embed = new EmbedBuilder().setColor(0x10b981).setImage('attachment://market.png');
 
-      // Encode the filter state for pagination
-      const filterKey = `${search}|${rarity}|${type}|${sort}`;
-
+      const filterKey = `${(search || '').slice(0, 30)}|${rarity}|${type}|${sort}`;
       const components = buildMarketButtons(listings, config, filterKey, 'browse');
 
       await interaction.editReply({ embeds: [embed], files: [attachment], components });
@@ -104,7 +106,6 @@ export default class MarketCommand extends SlashCommand {
     }
   }
 
-  // --- MY LISTINGS ---
   private async handleListings(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -133,30 +134,12 @@ export default class MarketCommand extends SlashCommand {
     }
   }
 
-  // --- SELL ---
   private async handleSell(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const itemId = interaction.options.getInteger('item', true);
-    const quantity = interaction.options.getInteger('quantity', true);
-    const pricePerUnit = interaction.options.getInteger('price', true);
-
     try {
-      const res = await apiFetch(Routes.marketList(), {
-        method: 'POST',
-        body: JSON.stringify({ discordId, itemId, quantity, pricePerUnit }),
-      });
-
-      const body = await res.json();
-
-      if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to create listing') });
-        return;
-      }
-
-      await interaction.editReply({
-        content: `🏪 **Listed on the Global Market!** x${quantity} of item #${itemId} at 🪙 ${pricePerUnit.toLocaleString()} gold each.`
-      });
+      const result = await buildSellPage(discordId, 0);
+      await interaction.editReply(result);
     } catch (err: any) {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
@@ -167,14 +150,98 @@ export default class MarketCommand extends SlashCommand {
 }
 
 /**
- * Builds action rows for market results.
- * 
- * Browse mode: numbered Buy buttons (🛒 1, 🛒 2, ...) + pagination
- * My listings mode: numbered Cancel buttons (❌ 1, ❌ 2, ...) + pagination
- * 
- * Listing IDs are encoded into button customIds so users never see or type them.
- * Discord allows max 5 buttons per row and max 5 rows total.
+ * Builds a paginated sell page with select menu + prev/next buttons.
+ * Shared by MarketCommand.handleSell and MarketSellPageButton.
  */
+export async function buildSellPage(discordId: string, page: number): Promise<{ content: string; components: ActionRowBuilder<any>[] }> {
+  const res = await apiFetch(Routes.inventory(discordId));
+  const body = await res.json();
+
+  if (!res.ok || !body.success) {
+    return { content: '❌ Failed to load inventory.', components: [] };
+  }
+
+  const inventory: IInventoryItem[] = body.data?.inventory || [];
+
+  if (inventory.length === 0) {
+    return { content: '🎒 Your inventory is empty — nothing to sell!', components: [] };
+  }
+
+  const sellable = inventory.filter((inv: IInventoryItem) => {
+    if (inv.isLocked) return false;
+    const def = ItemManager.get(inv.itemId);
+    if (!def || def.type === 'Consumable') return false;
+    return true;
+  });
+
+  if (sellable.length === 0) {
+    return { content: '❌ No sellable items. Unlock or acquire non-consumable items first.', components: [] };
+  }
+
+  const totalPages = Math.ceil(sellable.length / SELL_PAGE_SIZE);
+  const safePage = Math.max(0, Math.min(page, totalPages - 1));
+  const pageItems = sellable.slice(safePage * SELL_PAGE_SIZE, (safePage + 1) * SELL_PAGE_SIZE);
+
+  const options: StringSelectMenuOptionBuilder[] = [];
+  for (const inv of pageItems) {
+    const def = ItemManager.get(inv.itemId);
+    if (!def) continue;
+
+    const enhTag = inv.enhanceLevel > 0 ? ` +${inv.enhanceLevel}` : '';
+    const modTag = (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides) ? ' ✨' : '';
+    const value = def.value || 0;
+
+    options.push(
+      new StringSelectMenuOptionBuilder()
+        .setLabel(`${def.name}${enhTag} (x${inv.quantity})${modTag}`)
+        .setDescription(`${def.rarity} ${def.type} • Lvl ${def.level} • Base: ${value.toLocaleString()}g`)
+        .setValue(`${inv._id}:${inv.itemId}:${inv.quantity}`)
+    );
+  }
+
+  const components: ActionRowBuilder<any>[] = [];
+
+  if (options.length > 0) {
+    const selectMenu = new StringSelectMenuBuilder()
+      .setCustomId('mkt_sell_select')
+      .setPlaceholder('Select an item to list...')
+      .setMinValues(1)
+      .setMaxValues(1)
+      .addOptions(options);
+
+    components.push(new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(selectMenu));
+  }
+
+  if (totalPages > 1) {
+    const navRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
+      new ButtonBuilder()
+        .setCustomId(`mkt_sell_page:${safePage - 1}`)
+        .setLabel('◀ Prev')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage <= 0),
+      new ButtonBuilder()
+        .setCustomId('mkt_sell_noop')
+        .setLabel(`Page ${safePage + 1} / ${totalPages}`)
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId(`mkt_sell_page:${safePage + 1}`)
+        .setLabel('Next ▶')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage >= totalPages - 1),
+    );
+    components.push(navRow);
+  }
+
+  const header = totalPages > 1
+    ? `🏪 **Select an item to sell** (Page ${safePage + 1}/${totalPages} • ${sellable.length} items)`
+    : `🏪 **Select an item to sell** (${sellable.length} items)`;
+
+  return { content: header, components };
+}
+
+// --- HELPERS ---
+
 function buildMarketButtons(
   listings: MarketListing[],
   config: MarketPageConfig,
@@ -183,12 +250,11 @@ function buildMarketButtons(
 ): ActionRowBuilder<ButtonBuilder>[] {
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // Action buttons (buy or cancel) — up to 8 items, 2 rows of 4
   if (listings.length > 0) {
     const isBrowse = mode === 'browse';
-    const chunks = chunkArray(listings, 4); // Max 4 per row to leave room
+    const chunks = chunkArray(listings, 4);
 
-    for (const chunk of chunks.slice(0, 2)) { // Max 2 rows of actions
+    for (const chunk of chunks.slice(0, 2)) {
       const row = new ActionRowBuilder<ButtonBuilder>();
 
       for (let i = 0; i < chunk.length; i++) {
@@ -216,7 +282,6 @@ function buildMarketButtons(
     }
   }
 
-  // Pagination row
   if (config.totalPages > 1) {
     const navRow = new ActionRowBuilder<ButtonBuilder>().setComponents(
       new ButtonBuilder()

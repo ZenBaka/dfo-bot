@@ -7,10 +7,10 @@ import type { IInventoryItem } from "../../interfaces/IInventoryJSON";
 
 const ITEMS_PER_PAGE = 15;
 
-export default class BulkCollectButton extends Button {
-  constructor() { super('bulk_collect'); }
+export default class BulkDismantleButton extends Button {
+  constructor() { super('bulk_dismantle'); }
 
-  // customId format: bulk_collect:<pageOffset>
+  // customId format: bulk_dismantle:<pageOffset>
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     const pageOffset = parseInt(args?.[0] ?? '0', 10);
 
@@ -29,7 +29,7 @@ export default class BulkCollectButton extends Button {
     });
 
     if (eligible.length === 0) {
-      await interaction.reply({ content: '❌ No eligible items to collect on this page.', ephemeral: true });
+      await interaction.reply({ content: '❌ No eligible items to dismantle on this page.', ephemeral: true });
       return;
     }
 
@@ -49,23 +49,23 @@ export default class BulkCollectButton extends Button {
     if (options.length === 0) return;
 
     const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId('bulk_collect_select')
-      .setPlaceholder('Select items to collect...')
+      .setCustomId('bulk_dismantle_select')
+      .setPlaceholder('Select items to dismantle...')
       .setMinValues(1)
       .setMaxValues(options.length)
       .addOptions(options);
 
     const selectLabel = new LabelBuilder()
-      .setLabel('Select items to archive')
-      .setDescription('Selected items move from inventory to your collection book')
+      .setLabel('Select items to dismantle')
+      .setDescription('All selected items will be destroyed for Embers')
       .setStringSelectMenuComponent(selectMenu);
 
     const infoText = new TextDisplayBuilder()
-      .setContent('-# ⚠️ THIS IS PERMANENT. Items are removed from your inventory and added to your Collection Book. Modified items will be skipped. This cannot be undone.');
+      .setContent('-# 🔥 Items are permanently destroyed and converted to Embers. Enhanced items return bonus embers.');
 
     const modal = new ModalBuilder()
-      .setCustomId('bulk_collect_modal')
-      .setTitle('📖 Bulk Collect Items')
+      .setCustomId('bulk_dismantle_modal')
+      .setTitle('🔥 Bulk Dismantle Items')
       .addLabelComponents(selectLabel)
       .addTextDisplayComponents(infoText);
 

@@ -12,7 +12,7 @@ export interface CombatResponse {
 /**
  * Builds a complete combat/adventure response payload from API data.
  * Used by AttackCommand, FleeCommand, ExploreCommand, and all combat buttons.
- * 
+ *
  * Single source of truth for the combat UI — change it here, changes everywhere.
  */
 export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promise<CombatResponse> {
@@ -26,16 +26,16 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
 
   const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  // Determine if combat buttons should be shown
   const isCombatData = data as ICombatJSON;
   const isStepData = data as IStepJSON;
   const rewards = isStepData.rewards;
+  const playerStats = isStepData.playerStats;
 
-  const showButtons =
-    (isCombatData.combatEnded === false) ||  // Active combat (attack/flee result)
-    (isStepData.combatTrigger === true);      // New encounter from explore
+  const showCombatButtons =
+    (isCombatData.combatEnded === false) ||
+    (isStepData.combatTrigger === true);
 
-  if (showButtons) {
+  if (showCombatButtons) {
     const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
       new ButtonBuilder()
         .setCustomId('embedAttack')
@@ -47,12 +47,61 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
         .setStyle(ButtonStyle.Secondary),
     );
     components.push(row);
-  } else if (rewards.levelsGained >= 1) {
-    const row = new ActionRowBuilder<ButtonBuilder>();
-    const points = rewards.levelsGained * 2;
-    row.addComponents(new ButtonBuilder().setCustomId(`skillpoints:${points}`).setLabel(`⭐ Spend Skillpoints ${points}`).setStyle(ButtonStyle.Secondary));
+  } else {
+    // Post-combat / post-explore actions
+    const actionRow = new ActionRowBuilder<ButtonBuilder>();
+    let hasActions = false;
 
-    components.push(row);
+    // Skill points button if leveled up
+    if (rewards?.levelsGained >= 1) {
+      const points = rewards.levelsGained * 2;
+      actionRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`skillpoints:${points}`)
+          .setLabel(`⭐ Spend Skillpoints (${points})`)
+          .setStyle(ButtonStyle.Secondary)
+      );
+      hasActions = true;
+    }
+
+    // Rest button if HP < max and not dead
+    if (playerStats && playerStats.hp > 0 && playerStats.hp < playerStats.maxHp) {
+      actionRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId('rest')
+          .setLabel('🏨 Rest at Inn')
+          .setStyle(ButtonStyle.Primary)
+      );
+      hasActions = true;
+    }
+
+    // Explore again button
+    actionRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId('explore_again')
+        .setLabel('🗺️ Explore')
+        .setStyle(ButtonStyle.Success)
+    );
+    hasActions = true;
+
+    if (hasActions) {
+      components.push(actionRow);
+    }
+  }
+
+  // Build description with toll and chest info
+  const descParts: string[] = [];
+
+  if (rewards?.toll && rewards.toll > 0) {
+    descParts.push(`🪙 Zone toll: -${rewards.toll.toLocaleString()}g`);
+  }
+
+  if (rewards?.chestDrop) {
+    descParts.push(`📦 Found a **${rewards.chestDrop} Chest** while exploring!`);
+  }
+
+  if (descParts.length > 0) {
+    embed.setDescription(descParts.join('\n'));
   }
 
   return { embeds: [embed], files: [attachment], components };

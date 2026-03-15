@@ -6,6 +6,8 @@ import ItemImageBuilder from './ItemImageBuilder';
 import LeaderboardImageBuilder from './LeaderboardImageBuilder';
 import MarketImageBuilder from './MarketImageBuilder';
 import TravelImageBuilder from './TravelImageBuilder';
+import TasksImageBuilder from './TasksImageBuilder';
+import ChestsImageBuilder from './ChestsImageBuilder';
 
 if (!parentPort) {
   throw new Error('ImageWorker must be run as a worker thread');
@@ -50,6 +52,14 @@ parentPort.on('message', async (msg: { builderName: string; payload: any }) => {
 
       case 'travel':
         buffer = await TravelImageBuilder.build(msg.payload.playerLevel, msg.payload.currentZoneId);
+        break;
+
+      case 'tasks':
+        buffer = await TasksImageBuilder.build(msg.payload.tasks, msg.payload.config);
+        break;
+
+      case 'chests':
+        buffer = await ChestsImageBuilder.build(msg.payload.chests, msg.payload.config);
         break;
 
       default:

@@ -4,10 +4,13 @@ import { ICombatJSON } from '../interfaces/ICombatJSON';
 import { IPlayerJSON } from '../interfaces/IPlayerJSON';
 import { IItemJSON } from '../interfaces/IItemJSON';
 import { IInventoryItem } from '../interfaces/IInventoryJSON';
+import { ITaskJSON, IChestSlot } from '../interfaces/IGameJSON';
 import ItemManager from '../managers/ItemManager';
 import WorkerPool from './WorkerPool';
 import type { LeaderboardEntry, LeaderboardConfig } from './LeaderboardImageBuilder';
 import type { MarketListing, MarketPageConfig } from './MarketImageBuilder';
+import type { TasksPageConfig } from './TasksImageBuilder';
+import type { ChestsPageConfig } from './ChestsImageBuilder';
 
 /**
  * High-level image generation API.
@@ -57,5 +60,13 @@ export default class ImageService {
 
   public static travel(playerLevel: number, currentZoneId: number): Promise<Buffer> {
     return WorkerPool.run('travel', { playerLevel, currentZoneId });
+  }
+
+  public static tasks(tasks: ITaskJSON[], config: TasksPageConfig): Promise<Buffer> {
+    return WorkerPool.run('tasks', { tasks, config });
+  }
+
+  public static chests(chests: IChestSlot[], config: ChestsPageConfig): Promise<Buffer> {
+    return WorkerPool.run('chests', { chests, config });
   }
 }

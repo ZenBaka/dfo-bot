@@ -1,5 +1,6 @@
 import logger from "./utilities/Logger";
 import { Client, GatewayIntentBits } from "discord.js";
+import { ClusterClient, getInfo } from "discord-hybrid-sharding";
 import 'dotenv/config';
 import EventHandler from "./handlers/EventHandler";
 import SlashCommandHandler from "./handlers/SlashCommandHandler";
@@ -9,7 +10,14 @@ import ModalSubmitHandler from "./handlers/ModalSubmitHandler";
 import WorkerPool from "./utilities/WorkerPool";
 import PresenceManager from "./managers/PresenceManager";
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  shards: getInfo().SHARD_LIST,          // Hybrid sharding tells us which shards this cluster owns
+  shardCount: getInfo().TOTAL_SHARDS,    // Total shards across all clusters
+});
+
+// Attach the cluster client for IPC and broadcastEval
+(client as any).cluster = new ClusterClient(client);
 
 (async () => {
   try {

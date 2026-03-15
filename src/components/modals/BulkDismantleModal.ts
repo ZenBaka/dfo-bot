@@ -4,20 +4,19 @@ import { apiFetch } from "../../utilities/ApiClient";
 import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
-export default class BulkSellModal extends ModalSubmit {
-  constructor() { super('bulk_sell_modal'); }
+export default class BulkDismantleModal extends ModalSubmit {
+  constructor() { super('bulk_dismantle_modal'); }
 
   public async execute(interaction: ModalSubmitInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const selectedValues = interaction.fields.getStringSelectValues('bulk_sell_select');
+    const selectedValues = interaction.fields.getStringSelectValues('bulk_dismantle_select');
 
     if (!selectedValues || selectedValues.length === 0) {
       await interaction.editReply({ content: '❌ No items were selected.' });
       return;
     }
 
-    // Parse values: "docId-itemId-quantity" or legacy "itemId-quantity"
     const items = selectedValues.map(val => {
       const parts = val.split('-');
       if (parts.length >= 3) {
@@ -32,7 +31,7 @@ export default class BulkSellModal extends ModalSubmit {
     }
 
     try {
-      const res = await apiFetch(Routes.bulkSell(), {
+      const res = await apiFetch(Routes.bulkDismantle(), {
         method: 'POST',
         body: JSON.stringify({ discordId: interaction.user.id, items }),
       });
@@ -40,18 +39,18 @@ export default class BulkSellModal extends ModalSubmit {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Bulk sell failed.') });
+        await interaction.editReply({ content: formatError(body.error ?? 'Bulk dismantle failed.') });
         return;
       }
 
       await interaction.editReply({
-        content: `🪙 **Bulk Sell Complete!** ${body.message}\n💰 New Balance: **${body.newBalance?.toLocaleString() ?? '???'}** gold`
+        content: `🔥 **Bulk Dismantle Complete!** ${body.message}\n🔥 Total Embers: **${body.newEmbers?.toLocaleString() ?? '???'}**`
       });
     } catch (err: any) {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
 
-  public cooldown(): number { return 5; }
   public isAuthorOnly(): boolean { return true; }
+  public cooldown(): number { return 5; }
 }

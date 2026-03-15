@@ -4,42 +4,52 @@ import { apiFetch } from "../../utilities/ApiClient";
 import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
-export default class LockButton extends Button {
+export default class DismantleButton extends Button {
   constructor() {
-    super('lock');
+    super('dismantle');
   }
 
-  // customId format: lock:<docId>:<isLocked 0|1>
+  // customId format: dismantle:<docId>:<itemId>:<maxQuantity>
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferUpdate();
 
     const docId = args?.[0];
-    const currentlyLocked = args?.[1] === '1';
+    const itemId = parseInt(args?.[1] ?? '-1', 10);
+    const maxQty = parseInt(args?.[2] ?? '1', 10);
 
-    if (!docId) {
+    if (!docId || isNaN(itemId)) {
       await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [] });
       return;
     }
 
+    // Dismantle entire stack (user can use modal for partial later if needed)
+    const amount = maxQty;
+
     try {
-      const res = await apiFetch(Routes.lock(), {
+      const res = await apiFetch(Routes.dismantle(), {
         method: 'POST',
         body: JSON.stringify({
           discordId: interaction.user.id,
+          itemId,
           inventoryId: docId,
-          isLocked: !currentlyLocked, // Toggle
+          amount,
         }),
       });
 
-      const { success, isLocked, error } = await res.json();
+      const body = await res.json();
 
-      if (!res.ok || !success) {
-        await interaction.editReply({ content: formatError(error ?? 'Lock failed'), files: [], components: [] });
+      if (!res.ok || !body.success) {
+        await interaction.editReply({ content: formatError(body.error ?? 'Dismantle failed'), files: [], components: [] });
         return;
       }
 
       await interaction.editReply({
-        content: isLocked ? '🔒 Item locked!' : '🔓 Item unlocked!',
+        content: [
+          `🔥 **${body.message}**`,
+          ``,
+          `🔥 Embers gained: **+${body.embersGained?.toLocaleString() ?? '???'}**`,
+          `🔥 Total embers: **${body.newEmbers?.toLocaleString() ?? '???'}**`,
+        ].join('\n'),
         files: [], components: [],
       });
     } catch (err: any) {
@@ -48,5 +58,5 @@ export default class LockButton extends Button {
   }
 
   public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
+  public cooldown(): number { return 3; }
 }
