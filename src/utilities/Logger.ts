@@ -6,10 +6,9 @@ import { join } from 'path';
 const LOG_DIR = join(process.cwd(), 'logs');
 const LOG_FILE = join(LOG_DIR, 'bot.log');
 const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
-const MAX_FILES = 3;                       // Keep 3 rotated files
-const ROTATION_CHECK_INTERVAL = 60_000;    // Check size every 60 seconds
+const MAX_FILES = 3;
+const ROTATION_CHECK_INTERVAL = 60_000;
 
-// Ensure the logs directory exists
 if (!existsSync(LOG_DIR)) {
   mkdirSync(LOG_DIR, { recursive: true });
 }
@@ -23,18 +22,11 @@ const additionalLevels = {
 };
 
 // --- File destination (reopenable for rotation) ---
-let fileDestination = pino.destination({ dest: LOG_FILE, sync: false });
+// minLength: 0 ensures writes flush quickly — prevents sonic-boom "not ready" on exit
+let fileDestination = pino.destination({ dest: LOG_FILE, sync: false, minLength: 0 });
 
 /**
  * Rotates log files when bot.log exceeds MAX_SIZE_BYTES.
- * 
- * Rotation pattern:
- *   bot.log      → bot.1.log
- *   bot.1.log    → bot.2.log
- *   bot.2.log    → bot.3.log
- *   bot.3.log    → deleted
- * 
- * Then reopens the file destination for a fresh bot.log.
  */
 function rotateIfNeeded(): void {
   try {
@@ -43,10 +35,8 @@ function rotateIfNeeded(): void {
     const { size } = statSync(LOG_FILE);
     if (size < MAX_SIZE_BYTES) return;
 
-    // Flush pending writes before rotating
     fileDestination.flushSync();
 
-    // Shift existing rotated files (3 → deleted, 2 → 3, 1 → 2)
     for (let i = MAX_FILES; i >= 1; i--) {
       const older = join(LOG_DIR, `bot.${i}.log`);
       if (i === MAX_FILES) {
@@ -57,10 +47,7 @@ function rotateIfNeeded(): void {
       }
     }
 
-    // Current → bot.1.log
     renameSync(LOG_FILE, join(LOG_DIR, 'bot.1.log'));
-
-    // Reopen the destination — pino.destination creates the new file on first write
     fileDestination.reopen();
 
     logger.info(`[Logger] Log rotated. Previous file exceeded ${MAX_SIZE_BYTES / 1024 / 1024}MB`);
@@ -69,14 +56,13 @@ function rotateIfNeeded(): void {
   }
 }
 
-// --- Build the logger: pretty console + raw JSON file ---
+// --- Build the logger ---
 const logger = pino(
   {
     customLevels: additionalLevels,
     level: 'debug',
   },
   pino.multistream([
-    // Stream 1: Pretty console output (existing behavior)
     {
       level: 'debug',
       stream: pino.transport({
@@ -92,7 +78,6 @@ const logger = pino(
         },
       }),
     },
-    // Stream 2: JSON file output (structured, machine-readable)
     {
       level: 'debug',
       stream: fileDestination,
@@ -101,9 +86,23 @@ const logger = pino(
 );
 
 // --- Rotation check loop ---
-setInterval(rotateIfNeeded, ROTATION_CHECK_INTERVAL);
+const rotationInterval = setInterval(rotateIfNeeded, ROTATION_CHECK_INTERVAL);
 
-// --- Flush on exit ---
+/**
+ * Gracefully flush and close the file stream.
+ * Call this in your shutdown handler BEFORE process.exit().
+ */
+export function flushAndClose(): void {
+  try {
+    clearInterval(rotationInterval);
+    fileDestination.flushSync();
+    fileDestination.end();
+  } catch {
+    // Swallow — if sonic-boom isn't ready, nothing we can do
+  }
+}
+
+// Safely handle exit — wrap in try-catch to silence sonic-boom errors
 process.on('beforeExit', () => { try { fileDestination.flushSync(); } catch {} });
 process.on('exit', () => { try { fileDestination.flushSync(); } catch {} });
 

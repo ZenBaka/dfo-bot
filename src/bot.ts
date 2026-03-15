@@ -1,6 +1,5 @@
-import logger from "./utilities/Logger";
+import logger, { flushAndClose } from "./utilities/Logger";
 import { Client, GatewayIntentBits } from "discord.js";
-import { ClusterClient, getInfo } from "discord-hybrid-sharding";
 import 'dotenv/config';
 import EventHandler from "./handlers/EventHandler";
 import SlashCommandHandler from "./handlers/SlashCommandHandler";
@@ -10,14 +9,7 @@ import ModalSubmitHandler from "./handlers/ModalSubmitHandler";
 import WorkerPool from "./utilities/WorkerPool";
 import PresenceManager from "./managers/PresenceManager";
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
-  shards: getInfo().SHARD_LIST,          // Hybrid sharding tells us which shards this cluster owns
-  shardCount: getInfo().TOTAL_SHARDS,    // Total shards across all clusters
-});
-
-// Attach the cluster client for IPC and broadcastEval
-(client as any).cluster = new ClusterClient(client);
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
 (async () => {
   try {
@@ -29,6 +21,7 @@ const client = new Client({
     await client.login(process.env.BOT_TOKEN);
   } catch (error) {
     logger.error(error, `[FATAL] Critical start-up error:`);
+    flushAndClose();
     process.exit(1);
   }
 })();
@@ -44,11 +37,15 @@ async function shutdown(signal: string) {
     await WorkerPool.shutdown();
 
     logger.info('[System] Shutdown complete. Goodbye!');
-    process.exit(0);
   } catch (err) {
     logger.error(`[System] Error during shutdown: ${err}`);
-    process.exit(1);
   }
+
+  // Flush logger BEFORE exit — prevents sonic-boom "not ready" crash
+  flushAndClose();
+
+  // Small delay to let the flush complete, then exit
+  setTimeout(() => process.exit(0), 250);
 }
 
 process.on('SIGINT', () => shutdown('SIGINT'));
