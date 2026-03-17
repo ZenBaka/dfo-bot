@@ -1,6 +1,7 @@
 import {
   ButtonInteraction, Client, ActionRowBuilder,
   StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  MessageFlags,
 } from "discord.js";
 import Button from "../../structures/Button";
 
@@ -15,7 +16,7 @@ export default class ReforgeButton extends Button {
     const itemId = args?.[1];
 
     if (!docId || !itemId) {
-      await interaction.reply({ content: 'Error parsing item data!', ephemeral: true });
+      await interaction.reply({ content: 'Error parsing item data!', flags: MessageFlags.Ephemeral });
       return;
     }
 

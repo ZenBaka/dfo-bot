@@ -73,7 +73,7 @@ export default class TasksTabButton extends Button {
         )
       );
 
-      await interaction.editReply({ embeds: [embed], files: [attachment], components: components as any });
+      await interaction.editReply({ embeds: [embed], files: [attachment], components: components });
     } catch (err: any) {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }

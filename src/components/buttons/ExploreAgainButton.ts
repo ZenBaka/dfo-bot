@@ -23,19 +23,19 @@ export default class ExploreAgainButton extends Button {
       const data = await res.json() as IStepJSON;
 
       if (res.status === 429) {
-        await interaction.editReply({ content: formatCooldown('step', data.cooldownRemaining), files: [], components: [] });
+        await interaction.editReply({ content: formatCooldown('step', data.cooldownRemaining), files: [], components: [], embeds: [] });
         return;
       }
 
       if (data.error) {
-        await interaction.editReply({ content: formatError(data.error), files: [], components: [] });
+        await interaction.editReply({ content: formatError(data.error), files: [], components: [], embeds: [] });
         return;
       }
 
       const response = await buildCombatResponse(data);
       await interaction.editReply(response);
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

@@ -17,7 +17,7 @@ export default class EquipButton extends Button {
     const itemId = parseInt(args?.[1] ?? '-1', 10);
 
     if (!docId || isNaN(itemId)) {
-      await interaction.editReply({ files: [], components: [], content: 'Error parsing item data!' });
+      await interaction.editReply({ files: [], components: [], content: 'Error parsing item data!', embeds: [] });
       return;
     }
 
@@ -30,13 +30,13 @@ export default class EquipButton extends Button {
       const { success, error, message } = await res.json();
 
       if (!res.ok || !success) {
-        await interaction.editReply({ files: [], components: [], content: formatError(error ?? 'Equip failed') });
+        await interaction.editReply({ files: [], components: [], content: formatError(error ?? 'Equip failed'), embeds: [] });
         return;
       }
 
-      await interaction.editReply({ files: [], components: [], content: message ?? 'Item equipped!' });
+      await interaction.editReply({ files: [], components: [], content: message ?? 'Item equipped!', embeds: [] });
     } catch (err: any) {
-      await interaction.editReply({ files: [], components: [], content: formatError(err.message, err.code) });
+      await interaction.editReply({ files: [], components: [], content: formatError(err.message, err.code), embeds: [] });
     }
   }
 

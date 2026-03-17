@@ -17,7 +17,7 @@ export default class EnhanceButton extends Button {
     const itemId = parseInt(args?.[1] ?? '-1', 10);
 
     if (!docId || isNaN(itemId)) {
-      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -30,7 +30,7 @@ export default class EnhanceButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Enhancement failed'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Enhancement failed'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -53,9 +53,9 @@ export default class EnhanceButton extends Button {
       lines.push(``, `🪙 Gold spent: **${result.goldCost?.toLocaleString() ?? '???'}**`);
       lines.push(`🔥 Embers spent: **${result.emberCost?.toLocaleString() ?? '???'}**`);
 
-      await interaction.editReply({ content: lines.join('\n'), files: [], components: [] });
+      await interaction.editReply({ content: lines.join('\n'), files: [], components: [], embeds: [] });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

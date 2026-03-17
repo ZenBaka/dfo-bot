@@ -1,4 +1,4 @@
-import { ButtonInteraction, Client, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { ButtonInteraction, Client } from "discord.js";
 import Button from "../../structures/Button";
 
 const SECTIONS: Record<string, { title: string; emoji: string; content: string }> = {

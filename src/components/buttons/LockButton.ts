@@ -17,7 +17,7 @@ export default class LockButton extends Button {
     const currentlyLocked = args?.[1] === '1';
 
     if (!docId) {
-      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -34,16 +34,16 @@ export default class LockButton extends Button {
       const { success, isLocked, error } = await res.json();
 
       if (!res.ok || !success) {
-        await interaction.editReply({ content: formatError(error ?? 'Lock failed'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(error ?? 'Lock failed'), files: [], components: [], embeds: [] });
         return;
       }
 
       await interaction.editReply({
         content: isLocked ? '🔒 Item locked!' : '🔓 Item unlocked!',
-        files: [], components: [],
+        files: [], components: [], embeds: [],
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

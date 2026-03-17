@@ -15,7 +15,7 @@ export default class ChestStartButton extends Button {
 
     const chestId = args?.[0];
     if (!chestId) {
-      await interaction.editReply({ content: 'Error parsing chest data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing chest data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -28,7 +28,7 @@ export default class ChestStartButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to start unlock'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to start unlock'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -37,7 +37,7 @@ export default class ChestStartButton extends Button {
         files: [], components: [],
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

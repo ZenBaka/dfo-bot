@@ -20,7 +20,7 @@ export default class ChestOpenButton extends Button {
 
     const chestId = args?.[0];
     if (!chestId) {
-      await interaction.editReply({ content: 'Error parsing chest data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing chest data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -33,7 +33,7 @@ export default class ChestOpenButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to open chest'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to open chest'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -59,9 +59,9 @@ export default class ChestOpenButton extends Button {
       if (loot.gold > 0) lines.push(`🪙 **+${loot.gold.toLocaleString()}** Gold`);
       if (loot.embers > 0) lines.push(`🔥 **+${loot.embers.toLocaleString()}** Embers`);
 
-      await interaction.editReply({ content: lines.join('\n'), files: [], components: [] });
+      await interaction.editReply({ content: lines.join('\n'), files: [], components: [], embeds: [] });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 
