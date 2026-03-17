@@ -12,7 +12,7 @@ export default class TestCommand extends SlashCommand {
 
     const res = await fetch('https://capi.gg/api/facts/random', {
       headers: {
-        'Authorization': `Bearer ***REMOVED_API_KEY***`,
+        'Authorization': `Bearer ${process.env.API_KEY}`,
         'Content-Type': 'application/json'
       }
     });

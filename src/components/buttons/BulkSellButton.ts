@@ -1,4 +1,4 @@
-import { ButtonInteraction, Client, LabelBuilder, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextDisplayBuilder } from "discord.js";
+import { ButtonInteraction, Client, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextDisplayBuilder } from "discord.js";
 import Button from "../../structures/Button";
 import ItemManager from "../../managers/ItemManager";
 import { apiFetch } from "../../utilities/ApiClient";
@@ -31,7 +31,7 @@ export default class BulkSellButton extends Button {
     });
 
     if (eligible.length === 0) {
-      await interaction.reply({ content: '❌ No eligible items to sell on this page.', ephemeral: true });
+      await interaction.reply({ content: '❌ No eligible items to sell on this page.', flags: MessageFlags.Ephemeral });
       return;
     }
 

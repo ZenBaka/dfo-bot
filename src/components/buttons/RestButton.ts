@@ -21,7 +21,7 @@ export default class RestButton extends Button {
       const result = await res.json();
 
       if (!res.ok || !result.success) {
-        await interaction.editReply({ content: formatError(result.error ?? 'Rest failed'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(result.error ?? 'Rest failed'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -34,7 +34,7 @@ export default class RestButton extends Button {
         files: [], components: [], embeds: []
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

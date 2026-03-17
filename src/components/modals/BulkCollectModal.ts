@@ -13,7 +13,7 @@ export default class BulkCollectModal extends ModalSubmit {
     const selectedValues = interaction.fields.getStringSelectValues('bulk_collect_select');
 
     if (!selectedValues || selectedValues.length === 0) {
-      await interaction.editReply({ content: '❌ No items were selected.' });
+      await interaction.editReply({ content: '❌ No items were selected.', embeds: [] });
       return;
     }
 
@@ -26,7 +26,7 @@ export default class BulkCollectModal extends ModalSubmit {
     }).filter(i => !isNaN(i.itemId) && !isNaN(i.amount) && i.amount > 0);
 
     if (items.length === 0) {
-      await interaction.editReply({ content: '❌ Could not parse selected items.' });
+      await interaction.editReply({ content: '❌ Could not parse selected items.', embeds: [] });
       return;
     }
 
@@ -44,10 +44,10 @@ export default class BulkCollectModal extends ModalSubmit {
       }
 
       await interaction.editReply({
-        content: `📖 **Bulk Collect Complete!** ${body.message}`
+        content: `📖 **Bulk Collect Complete!** ${body.message}`, embeds: []
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code) });
+      await interaction.editReply({ content: formatError(err.message, err.code), embeds: [] });
     }
   }
 

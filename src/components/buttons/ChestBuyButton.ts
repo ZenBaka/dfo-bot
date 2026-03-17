@@ -15,7 +15,7 @@ export default class ChestBuyButton extends Button {
 
     const tier = args?.[0];
     if (!tier) {
-      await interaction.editReply({ content: 'Error parsing chest tier!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing chest tier!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -28,16 +28,16 @@ export default class ChestBuyButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to buy chest'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to buy chest'), files: [], components: [], embeds: [] });
         return;
       }
 
       await interaction.editReply({
         content: `🛒 **Purchased a ${tier} Chest!**\n🪙 Cost: **${body.goldCost?.toLocaleString() ?? '???'}** gold\n💰 Balance: **${body.newBalance?.toLocaleString() ?? '???'}** gold\n\nRun \`/chests\` to view your vault.`,
-        files: [], components: [],
+        files: [], components: [], embeds: [],
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

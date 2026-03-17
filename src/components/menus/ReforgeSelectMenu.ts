@@ -18,7 +18,7 @@ export default class ReforgeSelectMenu extends SelectMenu {
     const reforgeType = interaction.values[0]; // 'stats' | 'affixes' | 'full'
 
     if (!docId || isNaN(itemId) || !reforgeType) {
-      await interaction.editReply({ content: 'Error parsing reforge data!', components: [] });
+      await interaction.editReply({ content: 'Error parsing reforge data!', components: [], embeds: [] });
       return;
     }
 
@@ -36,7 +36,7 @@ export default class ReforgeSelectMenu extends SelectMenu {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Reforge failed'), components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Reforge failed'), components: [], embeds: [] });
         return;
       }
 
@@ -73,9 +73,9 @@ export default class ReforgeSelectMenu extends SelectMenu {
         }
       }
 
-      await interaction.editReply({ content: lines.join('\n'), components: [] });
+      await interaction.editReply({ content: lines.join('\n'), components: [], embeds: [] });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), components: [], embeds: [] });
     }
   }
 

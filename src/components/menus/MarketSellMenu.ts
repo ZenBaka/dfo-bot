@@ -1,4 +1,4 @@
-import { AnySelectMenuInteraction, Client, ModalBuilder, TextInputStyle } from "discord.js";
+import { AnySelectMenuInteraction, Client, MessageFlags, ModalBuilder, TextInputStyle } from "discord.js";
 import SelectMenu from "../../structures/SelectMenu";
 import ItemManager from "../../managers/ItemManager";
 
@@ -17,7 +17,7 @@ export default class MarketSellMenu extends SelectMenu {
     const maxQty = parseInt(maxQtyStr, 10);
 
     if (!docId || isNaN(itemId)) {
-      await interaction.reply({ content: 'Error parsing item data!', ephemeral: true });
+      await interaction.reply({ content: 'Error parsing item data!', flags: MessageFlags.Ephemeral });
       return;
     }
 

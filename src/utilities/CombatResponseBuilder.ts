@@ -1,7 +1,7 @@
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { ICombatJSON } from '../interfaces/ICombatJSON';
 import { IStepJSON } from '../interfaces/IStepJSON';
-import AdventureImageBuilder from './AdventureImageBuilder';
+import ImageService from './ImageService';
 
 export interface CombatResponse {
   embeds: EmbedBuilder[];
@@ -16,7 +16,7 @@ export interface CombatResponse {
  * Single source of truth for the combat UI — change it here, changes everywhere.
  */
 export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promise<CombatResponse> {
-  const imageBuffer = await AdventureImageBuilder.build(data);
+  const imageBuffer = await ImageService.adventure(data);
   const attachment = new AttachmentBuilder(imageBuffer, { name: 'adventure.png' });
 
   const hasEnemy = !!(data as any).enemy;

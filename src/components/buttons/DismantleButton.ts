@@ -18,7 +18,7 @@ export default class DismantleButton extends Button {
     const maxQty = parseInt(args?.[2] ?? '1', 10);
 
     if (!docId || isNaN(itemId)) {
-      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing item data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -39,7 +39,7 @@ export default class DismantleButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Dismantle failed'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Dismantle failed'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -50,10 +50,10 @@ export default class DismantleButton extends Button {
           `🔥 Embers gained: **+${body.embersGained?.toLocaleString() ?? '???'}**`,
           `🔥 Total embers: **${body.newEmbers?.toLocaleString() ?? '???'}**`,
         ].join('\n'),
-        files: [], components: [],
+        files: [], components: [], embeds: []
       });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

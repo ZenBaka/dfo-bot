@@ -17,7 +17,7 @@ export default class TaskClaimButton extends Button {
     const period = args?.[1] ?? 'daily';
 
     if (!taskId) {
-      await interaction.editReply({ content: 'Error parsing task data!', files: [], components: [] });
+      await interaction.editReply({ content: 'Error parsing task data!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -30,7 +30,7 @@ export default class TaskClaimButton extends Button {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to claim task'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to claim task'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -52,9 +52,9 @@ export default class TaskClaimButton extends Button {
 
       lines.push(``, `Run \`/tasks ${period}\` to see remaining tasks.`);
 
-      await interaction.editReply({ content: lines.join('\n'), files: [], components: [] });
+      await interaction.editReply({ content: lines.join('\n'), files: [], components: [], embeds: [] });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

@@ -20,7 +20,7 @@ export default class InvSelectMenu extends SelectMenu {
     const discordId = interaction.user.id;
 
     if (!docId) {
-      await interaction.editReply({ content: 'No item selected!', files: [], components: [] });
+      await interaction.editReply({ content: 'No item selected!', files: [], components: [], embeds: [] });
       return;
     }
 
@@ -30,7 +30,7 @@ export default class InvSelectMenu extends SelectMenu {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to load inventory'), files: [], components: [] });
+        await interaction.editReply({ content: formatError(body.error ?? 'Failed to load inventory'), files: [], components: [], embeds: [] });
         return;
       }
 
@@ -41,7 +41,7 @@ export default class InvSelectMenu extends SelectMenu {
       const item = inventory.find((inv: IInventoryItem) => inv._id === docId);
 
       if (!item) {
-        await interaction.editReply({ content: 'Item not found in your inventory!', files: [], components: [] });
+        await interaction.editReply({ content: 'Item not found in your inventory!', files: [], components: [], embeds: [] });
         return;
       }
 
@@ -49,7 +49,7 @@ export default class InvSelectMenu extends SelectMenu {
       const viewer = await buildItemView(player, item);
       await interaction.editReply({ ...viewer, embeds: viewer.embeds });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [] });
+      await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
 

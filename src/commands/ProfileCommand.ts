@@ -6,8 +6,8 @@ import { ICollectionJSON } from "../interfaces/ICollectionJSON";
 import Routes from "../utilities/Routes";
 import { apiFetch } from "../utilities/ApiClient";
 import { formatError } from "../utilities/ErrorMessages";
-import ProfileImageBuilder from "../utilities/ProfileImageBuilder";
 import { EquipmentSlot } from "../interfaces/IItemJSON";
+import ImageService from "../utilities/ImageService";
 
 export default class ProfileCommand extends SlashCommand {
   constructor() {
@@ -38,7 +38,7 @@ export default class ProfileCommand extends SlashCommand {
     const components: ActionRowBuilder<any>[] = [];
 
     // Generate the canvas profile image
-    const imageBuffer = await ProfileImageBuilder.build(player, targetUser);
+    const imageBuffer = await ImageService.profile(player, targetUser);
     const profileAttachment = new AttachmentBuilder(imageBuffer, { name: 'profile.png' });
 
     // Only show interactive components for your OWN profile
