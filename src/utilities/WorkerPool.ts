@@ -68,7 +68,7 @@ export function init(size?: number): void {
  * Submit a rendering task to the pool.
  * If a worker is free it runs immediately; otherwise it queues.
  */
-export function run(builderName: string, payload: any): Promise<Buffer> {
+export async function run(builderName: string, payload: any): Promise<Buffer> {
   if (!isInitialized) {
     throw new Error(
       '[WorkerPool] Pool not initialized — call WorkerPool.init() first'

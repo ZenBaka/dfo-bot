@@ -23,11 +23,11 @@ function serializeItemCache(): Record<number, IItemJSON> {
   return cache;
 }
 
-export function adventure(data: IStepJSON | ICombatJSON): Promise<Buffer> {
+export async function adventure(data: IStepJSON | ICombatJSON): Promise<Buffer> {
   return WorkerPool.run('adventure', { data });
 }
 
-export function profile(
+export async function profile(
   player: IPlayerJSON,
   discordUser: User
 ): Promise<Buffer> {
@@ -38,7 +38,7 @@ export function profile(
   });
 }
 
-export function inventory(
+export async function inventory(
   chunk: IInventoryItem[],
   player: IPlayerJSON
 ): Promise<Buffer> {
@@ -49,39 +49,39 @@ export function inventory(
   });
 }
 
-export function item(itemData: IItemJSON): Promise<Buffer> {
+export async function item(itemData: IItemJSON): Promise<Buffer> {
   return WorkerPool.run('item', { item: itemData });
 }
 
-export function leaderboard(
+export async function leaderboard(
   entries: LeaderboardEntry[],
   config: LeaderboardConfig
 ): Promise<Buffer> {
   return WorkerPool.run('leaderboard', { entries, config });
 }
 
-export function market(
+export async function market(
   listings: MarketListing[],
   config: MarketPageConfig
 ): Promise<Buffer> {
   return WorkerPool.run('market', { listings, config });
 }
 
-export function travel(
+export async function travel(
   playerLevel: number,
   currentZoneId: number
 ): Promise<Buffer> {
   return WorkerPool.run('travel', { playerLevel, currentZoneId });
 }
 
-export function tasks(
+export async function tasks(
   tasks: ITaskJSON[],
   config: TasksPageConfig
 ): Promise<Buffer> {
   return WorkerPool.run('tasks', { tasks, config });
 }
 
-export function chests(
+export async function chests(
   chests: IChestSlot[],
   config: ChestsPageConfig
 ): Promise<Buffer> {
