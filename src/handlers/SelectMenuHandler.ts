@@ -42,14 +42,14 @@ export default class SelectMenuHandler {
       const menu = this._cache.get(id);
       if (!menu) throw new Error(`No executable data could be found for menu with ID: ${customId}`);
 
-      if (menu.isAuthorOnly() && interaction.user.id !== interaction.message.interactionMetadata?.user.id) return;
+      if (menu.isAuthorOnly && interaction.user.id !== interaction.message.interactionMetadata?.user.id) return;
 
       const key = `s-${customId}-${interaction.user.id}`;
 
       if (CooldownManager.onCooldown(key)) return;
 
       await menu.execute(interaction, client, target);
-      CooldownManager.addCooldown(key, menu.cooldown());
+      CooldownManager.addCooldown(key, menu.cooldown);
     } catch (err) {
       throw err;
     }

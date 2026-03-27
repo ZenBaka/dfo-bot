@@ -45,7 +45,7 @@ export default class ButtonHandler {
         return;
       }
 
-      if (button.isAuthorOnly() && interaction.user.id !== interaction.message.interactionMetadata?.user.id) return;
+      if (button.isAuthorOnly && interaction.user.id !== interaction.message.interactionMetadata?.user.id) return;
 
       let key = `b-${id}-${interaction.user.id}`;
       if (customId === 'startNewDay') key = `adventure-${interaction.user.id}`;
@@ -56,7 +56,7 @@ export default class ButtonHandler {
       }
 
       await button.execute(interaction, client, target);
-      CooldownManager.addCooldown(key, button.cooldown());
+      CooldownManager.addCooldown(key, button.cooldown);
       logger.button(`${interaction.user.username} (${interaction.user.id}) used '${customId}'`);
     } catch (err) {
       throw err;

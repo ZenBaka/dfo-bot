@@ -47,7 +47,7 @@ export default class ModalSubmitHandler {
       if (CooldownManager.onCooldown(key)) return;
 
       await modal.execute(interaction, client, target);
-      CooldownManager.addCooldown(key, modal.cooldown());
+      CooldownManager.addCooldown(key, modal.cooldown);
     } catch (err) {
       throw err;
     }

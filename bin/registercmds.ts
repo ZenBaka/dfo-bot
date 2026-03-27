@@ -15,12 +15,10 @@ for (const file of commandFiles) {
   const command = require(fullPath);
   const Module = new command.default();
   if (!(Module instanceof SlashCommand)) continue;
-  const isGlobal = Module.isGlobalCommand();
-  const commandData = Module.getData();
-  if (isGlobal) {
-    globalCommandArray.push(commandData.toJSON());
+  if (Module.isGlobalCommand) {
+    globalCommandArray.push(Module.data.toJSON());
   } else {
-    commandArray.push(commandData.toJSON());
+    commandArray.push(Module.data.toJSON());
   }
 }
 
