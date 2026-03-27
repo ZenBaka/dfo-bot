@@ -22,8 +22,7 @@ export default class SlashCommandHandler {
       let command = require(join(filePath, file));
       command = new command.default();
       if (!(command instanceof SlashCommand)) continue;
-      const commandData = command.getData();
-      this._cache.set(commandData.name, command);
+      this._cache.set(command.data.name, command);
     }
 
     logger.info(`[SlashCommandHandler] Cached a total of ${this._cache.size} commands`);
@@ -49,7 +48,7 @@ export default class SlashCommandHandler {
 
       await command.execute(interaction, client);
 
-      CooldownManager.addCooldown(key, command.cooldown());
+      CooldownManager.addCooldown(key, command.cooldown);
       logger.command(`/${name} | ${interaction.user.username} (${interaction.user.id}) | ${interaction.guild?.name ?? 'DM'} | ${Date.now() - startTime}ms`);
     } catch (err) {
       throw err;

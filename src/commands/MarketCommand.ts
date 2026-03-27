@@ -40,7 +40,13 @@ export const SELL_PAGE_SIZE = 25;
 
 export default class MarketCommand extends SlashCommand {
   constructor() {
-    super('market', 'Browse and trade on the Global Market', 'Gaming');
+    super({
+      name: "market",
+      description: "Browse and trade on the Global Market",
+      category: "Gaming",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
 
     this.data
       .addSubcommand((sub) =>
@@ -144,9 +150,6 @@ export default class MarketCommand extends SlashCommand {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }
 
 /**

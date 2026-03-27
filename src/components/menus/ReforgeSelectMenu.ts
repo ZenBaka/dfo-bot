@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class ReforgeSelectMenu extends SelectMenu {
   constructor() {
-    super('reforge_select');
+    super({ customId: "reforge_select", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: reforge_select:<docId>:<itemId>
@@ -78,7 +78,4 @@ export default class ReforgeSelectMenu extends SelectMenu {
       await interaction.editReply({ content: formatError(err.message, err.code), components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

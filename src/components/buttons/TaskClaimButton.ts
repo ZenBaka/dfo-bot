@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class TaskClaimButton extends Button {
   constructor() {
-    super('task_claim');
+    super({ customId: "task_claim", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: task_claim:<taskId>:<period>
@@ -57,7 +57,4 @@ export default class TaskClaimButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

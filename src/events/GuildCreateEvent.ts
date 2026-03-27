@@ -4,7 +4,10 @@ import logger from "../utilities/Logger";
 
 export default class GuildCreateEvent extends Event {
   constructor() {
-    super(Events.GuildCreate);
+    super({
+      name: Events.GuildCreate,
+      isOnce: false
+    });
   }
 
   public async execute(guild: Guild, client: Client): Promise<void> {
@@ -77,9 +80,5 @@ export default class GuildCreateEvent extends Event {
     }
 
     logger.info(`Joined a new guild! ${guild.name} (${guild.id})`);
-  }
-
-  public isOnce(): boolean {
-    return false;
   }
 }

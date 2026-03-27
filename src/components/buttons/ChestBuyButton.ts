@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class ChestBuyButton extends Button {
   constructor() {
-    super('chest_buy');
+    super({ customId: "chest_buy", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: chest_buy:<tier>
@@ -40,7 +40,4 @@ export default class ChestBuyButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -11,7 +11,13 @@ import type { IChestSlot } from "../interfaces/IGameJSON";
 
 export default class ChestsCommand extends SlashCommand {
   constructor() {
-    super('chests', 'View and manage your chest vault', 'Gaming');
+    super({
+      name: "chests",
+      description: "View and manage your chest vault",
+      category: "Gaming",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -107,9 +113,6 @@ export default class ChestsCommand extends SlashCommand {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }
 
 function chunkArray<T>(arr: T[], size: number): T[][] {

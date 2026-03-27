@@ -18,10 +18,16 @@ const typeOptions = [
 
 export default class LookupCommand extends SlashCommand {
   constructor() {
-    super('lookup', 'Lookup specific objects in the game', 'Moderator');
+    super({
+      name: "lookup",
+      description: "Lookup specific objects in the game",
+      category: "Moderator",
+      cooldown: 3,
+      isGlobalCommand: false
+    });
 
-    this.data.addStringOption((o) => o.setName('type').setDescription('Select a type').setChoices(typeOptions).setRequired(true));
-    this.data.addIntegerOption((o) => o.setName('id').setDescription('Enter an id to lookup. Use -1 for all').setMinValue(-1).setRequired(true).setAutocomplete(true));
+    this.builder.addStringOption((o) => o.setName('type').setDescription('Select a type').setChoices(typeOptions).setRequired(true));
+    this.builder.addIntegerOption((o) => o.setName('id').setDescription('Enter an id to lookup. Use -1 for all').setMinValue(-1).setRequired(true).setAutocomplete(true));
   }
 
   /**
@@ -159,7 +165,4 @@ export default class LookupCommand extends SlashCommand {
         break;
     }
   }
-
-  public isGlobalCommand(): boolean { return false; }
-  public cooldown(): number { return 3; }
 }

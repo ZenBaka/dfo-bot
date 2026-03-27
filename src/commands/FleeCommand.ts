@@ -8,7 +8,13 @@ import Routes from "../utilities/Routes";
 
 export default class FleeCommand extends SlashCommand {
   constructor() {
-    super('flee', 'Flee the enemy encounter you\'re in.', 'Gaming');
+    super({
+      name: "flee",
+      description: "Flee the enemy encounter you're in.",
+      category: "Gaming",
+      cooldown: 2,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -34,7 +40,4 @@ export default class FleeCommand extends SlashCommand {
     const response = await buildCombatResponse(data);
     await interaction.editReply(response);
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

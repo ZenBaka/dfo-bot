@@ -5,7 +5,7 @@ import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class RegisterAcceptButton extends Button {
-  constructor() { super('register_accept'); }
+  constructor() { super({ customId: "register_accept", cooldown: 5, isAuthorOnly: true }); }
 
   public async execute(interaction: ButtonInteraction, client: Client): Promise<void> {
     await interaction.deferUpdate();
@@ -76,7 +76,4 @@ export default class RegisterAcceptButton extends Button {
       });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

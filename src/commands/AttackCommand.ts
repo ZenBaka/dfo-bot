@@ -8,7 +8,13 @@ import Routes from "../utilities/Routes";
 
 export default class AttackCommand extends SlashCommand {
   constructor() {
-    super('attack', 'Attack the enemy in your encounter', 'Gaming');
+    super({
+      name: "attack",
+      description: "Attack the enemy in your encounter",
+      category: "Gaming",
+      cooldown: 1.8,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -34,7 +40,4 @@ export default class AttackCommand extends SlashCommand {
     const response = await buildCombatResponse(data);
     await interaction.editReply(response);
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 1.8; }
 }

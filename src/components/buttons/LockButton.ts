@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class LockButton extends Button {
   constructor() {
-    super('lock');
+    super({ customId: "lock", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: lock:<docId>:<isLocked 0|1>
@@ -46,7 +46,4 @@ export default class LockButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

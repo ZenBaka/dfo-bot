@@ -4,7 +4,7 @@ import ItemManager from "../../managers/ItemManager";
 
 export default class MarketSellMenu extends SelectMenu {
   constructor() {
-    super('mkt_sell_select');
+    super({ customId: "mkt_sell_select", cooldown: 3, isAuthorOnly: true });
   }
 
   // select value format: docId:itemId:maxQuantity
@@ -52,7 +52,4 @@ export default class MarketSellMenu extends SelectMenu {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

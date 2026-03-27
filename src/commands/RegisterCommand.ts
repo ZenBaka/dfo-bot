@@ -3,7 +3,13 @@ import SlashCommand from "../structures/SlashCommand";
 
 export default class RegisterCommand extends SlashCommand {
   constructor() {
-    super('register', 'Register new user data with the bot', 'General');
+    super({
+      name: "register",
+      description: "Register new user data with the bot",
+      category: "General",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -41,13 +47,5 @@ export default class RegisterCommand extends SlashCommand {
     );
 
     await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 5;
   }
 }

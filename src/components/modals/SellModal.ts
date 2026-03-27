@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class SellModal extends ModalSubmit {
   constructor() {
-    super('sell');
+    super({ customId: "sell", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: sell:<docId>
@@ -43,7 +43,4 @@ export default class SellModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

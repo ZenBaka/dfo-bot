@@ -36,10 +36,16 @@ const options = [
 
 export default class NetworkCommand extends SlashCommand {
   constructor() {
-    super('network', 'Track all clusters and guilds the bot is connected to', 'Moderator');
+    super({
+      name: "network",
+      description: "Track all clusters and guilds the bot is connected to",
+      category: "Moderator",
+      cooldown: 5,
+      isGlobalCommand: false
+    });
 
-    this.data.addStringOption((o) => o.setName('type').setDescription('Select a view type').setChoices(options).setRequired(true));
-    this.data.addStringOption((o) => o.setName('id').setDescription("Enter a Cluster ID or Guild ID. Use 'all' to view everything.").setRequired(false));
+    this.builder.addStringOption((o) => o.setName('type').setDescription('Select a view type').setChoices(options).setRequired(true));
+    this.builder.addStringOption((o) => o.setName('id').setDescription("Enter a Cluster ID or Guild ID. Use 'all' to view everything.").setRequired(false));
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -225,13 +231,5 @@ export default class NetworkCommand extends SlashCommand {
         joinedAt: g.joinedTimestamp
       }));
     }
-  }
-
-  public isGlobalCommand(): boolean {
-    return false;
-  }
-
-  public cooldown(): number {
-    return 5; 
   }
 }

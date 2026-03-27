@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class EnhanceButton extends Button {
   constructor() {
-    super('enhance');
+    super({ customId: "enhance", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: enhance:<docId>:<itemId>
@@ -58,7 +58,4 @@ export default class EnhanceButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

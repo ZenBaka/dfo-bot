@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class DismantleButton extends Button {
   constructor() {
-    super('dismantle');
+    super({ customId: "dismantle", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: dismantle:<docId>:<itemId>:<maxQuantity>
@@ -56,7 +56,4 @@ export default class DismantleButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

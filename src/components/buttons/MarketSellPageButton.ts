@@ -5,7 +5,7 @@ import { buildSellPage } from "../../commands/MarketCommand";
 
 export default class MarketSellPageButton extends Button {
   constructor() {
-    super('mkt_sell_page');
+    super({ customId: "mkt_sell_page", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: mkt_sell_page:<pageNumber>
@@ -21,7 +21,4 @@ export default class MarketSellPageButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), components: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

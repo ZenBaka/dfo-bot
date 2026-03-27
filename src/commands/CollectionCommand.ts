@@ -9,9 +9,15 @@ import { formatError } from "../utilities/ErrorMessages";
 
 export default class CollectionCommand extends SlashCommand {
   constructor() {
-    super('collection', 'View your or another player\'s item collection', 'General');
+    super({
+      name: "collection",
+      description: "View your or another player's item collection",
+      category: "General",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
 
-    this.data.addUserOption((o) => 
+    this.builder.addUserOption((o) => 
         o.setName('user')
          .setDescription('Select a user')
          .setRequired(false)
@@ -92,13 +98,5 @@ export default class CollectionCommand extends SlashCommand {
       .setIdleTimeout(60_000);
 
     await paginator.start(interaction);
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 5;
   }
 }

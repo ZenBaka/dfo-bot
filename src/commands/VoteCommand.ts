@@ -3,7 +3,13 @@ import SlashCommand from "../structures/SlashCommand";
 
 export default class VoteCommand extends SlashCommand {
   constructor() {
-    super('vote', 'Support DFO by voting on top.gg!', 'General');
+    super({
+      name: "vote",
+      description: "Support DFO by voting on top.gg!",
+      category: "General",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -32,13 +38,5 @@ export default class VoteCommand extends SlashCommand {
     );
 
     await interaction.reply({ embeds: [embed], components: [row] });
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 5;
   }
 }

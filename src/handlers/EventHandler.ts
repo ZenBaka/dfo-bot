@@ -21,10 +21,10 @@ export default class EventHandler {
       event = new event.default();
       if (!(event instanceof Event)) continue;
 
-      if (event.isOnce()) {
-        this.client.once(event.getName(), (...args: any[]) => event.execute(...args, this.client));
+      if (event.isOnce) {
+        this.client.once(event.name, (...args: any[]) => event.execute(...args, this.client));
       } else {
-        this.client.on(event.getName(), (...args: any[]) => event.execute(...args, this.client));
+        this.client.on(event.name, (...args: any[]) => event.execute(...args, this.client));
       }
     }
   }

@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class EquipButton extends Button {
   constructor() {
-    super('equip');
+    super({ customId: "equip", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: equip:<docId>:<itemId>
@@ -39,7 +39,4 @@ export default class EquipButton extends Button {
       await interaction.editReply({ files: [], components: [], content: formatError(err.message, err.code), embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

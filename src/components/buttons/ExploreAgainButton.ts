@@ -8,7 +8,7 @@ import { IStepJSON } from "../../interfaces/IStepJSON";
 
 export default class ExploreAgainButton extends Button {
   constructor() {
-    super('explore_again');
+    super({ customId: "explore_again", cooldown: 7, isAuthorOnly: true });
   }
 
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
@@ -38,7 +38,4 @@ export default class ExploreAgainButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 7; }
 }

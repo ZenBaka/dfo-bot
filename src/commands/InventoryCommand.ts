@@ -15,7 +15,13 @@ import ImageService from "../utilities/ImageService";
 
 export default class InventoryCommand extends SlashCommand {
   constructor() {
-    super('inventory', 'View your inventory and manage items', 'General');
+    super({
+      name: "inventory",
+      description: "View your inventory and manage items",
+      category: "General",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
     // No options — the select menu handles item selection
   }
 
@@ -124,7 +130,4 @@ export default class InventoryCommand extends SlashCommand {
 
     await paginator.start(interaction);
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

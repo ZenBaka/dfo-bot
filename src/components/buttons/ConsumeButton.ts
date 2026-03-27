@@ -3,7 +3,7 @@ import Button from "../../structures/Button";
 
 export default class ConsumeButton extends Button {
   constructor() {
-    super('consume');
+    super({ customId: "consume", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: consume:<docId>:<maxQuantity>
@@ -22,7 +22,4 @@ export default class ConsumeButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

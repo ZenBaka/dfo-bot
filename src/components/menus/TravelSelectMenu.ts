@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 import { getZone } from "../../utilities/ZoneData";
 
 export default class TravelSelectMenu extends SelectMenu {
-  constructor() { super('travel_select'); }
+  constructor() { super({ customId: "travel_select", cooldown: 5, isAuthorOnly: true }); }
 
   public async execute(interaction: AnySelectMenuInteraction, client: Client): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -40,7 +40,4 @@ export default class TravelSelectMenu extends SelectMenu {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

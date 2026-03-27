@@ -2,7 +2,7 @@ import { ButtonInteraction, Client, LabelBuilder, ModalBuilder, TextDisplayBuild
 import Button from "../../structures/Button";
 
 export default class SkillPointsButton extends Button {
-  constructor() { super('skillpoints'); }
+  constructor() { super({ customId: "skillpoints", cooldown: 3, isAuthorOnly: true }); }
 
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     const availablePoints = parseInt(args?.[0] ?? '0', 10);
@@ -42,7 +42,4 @@ export default class SkillPointsButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -11,8 +11,14 @@ import ImageService from "../utilities/ImageService";
 
 export default class ProfileCommand extends SlashCommand {
   constructor() {
-    super('profile', 'View your or another player\'s profile', 'General');
-    this.data.addUserOption((o) => o.setName('user').setDescription('Select a user').setRequired(false));
+    super({
+      name: "profile",
+      description: "View your or another player's profile",
+      category: "General",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
+    this.builder.addUserOption((o) => o.setName('user').setDescription('Select a user').setRequired(false));
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -78,7 +84,4 @@ export default class ProfileCommand extends SlashCommand {
       components,
     });
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

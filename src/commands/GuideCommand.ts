@@ -121,8 +121,14 @@ const SECTION_ORDER = ['basics', 'combat', 'workshop', 'economy', 'tasks', 'zone
 
 export default class GuideCommand extends SlashCommand {
   constructor() {
-    super('guide', 'View the DFO game guide', 'General');
-    this.data.addStringOption((o) =>
+    super({
+      name: "guide",
+      description: "View the DFO game guide",
+      category: "General",
+      cooldown: 3,
+      isGlobalCommand: true
+    });
+    this.builder.addStringOption((o) =>
       o.setName('section')
         .setDescription('Jump to a specific section')
         .setRequired(false)
@@ -176,7 +182,4 @@ export default class GuideCommand extends SlashCommand {
       components: navRow.components.length > 0 ? [navRow] : [],
     });
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

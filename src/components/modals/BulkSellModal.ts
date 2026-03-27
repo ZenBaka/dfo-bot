@@ -5,7 +5,7 @@ import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class BulkSellModal extends ModalSubmit {
-  constructor() { super('bulk_sell_modal'); }
+  constructor() { super({ customId: "bulk_sell_modal", cooldown: 5, isAuthorOnly: true }); }
 
   public async execute(interaction: ModalSubmitInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -51,7 +51,4 @@ export default class BulkSellModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public cooldown(): number { return 5; }
-  public isAuthorOnly(): boolean { return true; }
 }

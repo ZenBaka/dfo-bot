@@ -8,7 +8,13 @@ import Routes from "../utilities/Routes";
 
 export default class ExploreCommand extends SlashCommand {
   constructor() {
-    super('explore', 'Explore the world and find items or enemy encounters!', 'Gaming');
+    super({
+      name: "explore",
+      description: "Explore the world and find items or enemy encounters!",
+      category: "Gaming",
+      cooldown: 7,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -39,7 +45,4 @@ export default class ExploreCommand extends SlashCommand {
     const response = await buildCombatResponse(data);
     await interaction.editReply(response);
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 7; }
 }

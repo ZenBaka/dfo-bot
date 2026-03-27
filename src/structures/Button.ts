@@ -1,17 +1,30 @@
 import IExecutable from "../interfaces/IExecutable";
-import ICooldown from "../interfaces/ICooldown";
 import { ButtonInteraction, Client } from "discord.js";
 
-export default abstract class Button implements IExecutable, ICooldown {
-  public customId: string;
+export interface ButtonOptions {
+  customId: string;
+  cooldown: number;
+  isAuthorOnly: boolean;
+}
 
-  constructor(customId: string) {
-    this.customId = customId;
+export default abstract class Button implements IExecutable {
+  private readonly options: ButtonOptions;
+
+  constructor(options: ButtonOptions) {
+    this.options = options;
   }
 
-  public abstract isAuthorOnly(): boolean;
+  public get customId(): string {
+    return this.options.customId;
+  }
+
+  public get cooldown(): number {
+    return this.options.cooldown;
+  }
+
+  public get isAuthorOnly(): boolean {
+    return this.options.isAuthorOnly;
+  }
 
   public abstract execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void>;
-
-  public abstract cooldown(): number;
 }

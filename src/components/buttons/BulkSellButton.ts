@@ -8,7 +8,7 @@ import type { IInventoryItem } from "../../interfaces/IInventoryJSON";
 const ITEMS_PER_PAGE = 15;
 
 export default class BulkSellButton extends Button {
-  constructor() { super('bulk_sell'); }
+  constructor() { super({ customId: "bulk_sell", cooldown: 3, isAuthorOnly: true }); }
 
   // customId format: bulk_sell:<pageOffset>
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
@@ -74,7 +74,4 @@ export default class BulkSellButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

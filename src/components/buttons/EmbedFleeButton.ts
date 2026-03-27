@@ -7,7 +7,7 @@ import { formatError, formatCooldown } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class EmbedFleeButton extends Button {
-  constructor() { super('embedFlee'); }
+  constructor() { super({ customId: "embedFlee", cooldown: 1.8, isAuthorOnly: true }); }
 
   public async execute(interaction: ButtonInteraction, client: Client): Promise<void> {
     await interaction.deferUpdate();
@@ -32,7 +32,4 @@ export default class EmbedFleeButton extends Button {
     const response = await buildCombatResponse(data);
     await interaction.editReply(response);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 1.8; }
 }

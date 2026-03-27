@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class ChestStartButton extends Button {
   constructor() {
-    super('chest_start');
+    super({ customId: "chest_start", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: chest_start:<chestId>
@@ -40,7 +40,4 @@ export default class ChestStartButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

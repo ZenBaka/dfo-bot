@@ -6,7 +6,13 @@ import Routes from "../utilities/Routes";
 
 export default class RestCommand extends SlashCommand {
   constructor() {
-    super('rest', 'Rest at the inn to restore HP (costs gold)', 'Gaming');
+    super({
+      name: "rest",
+      description: "Rest at the inn to restore HP (costs gold)",
+      category: "Gaming",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -44,7 +50,4 @@ export default class RestCommand extends SlashCommand {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

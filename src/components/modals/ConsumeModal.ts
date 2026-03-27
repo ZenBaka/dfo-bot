@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class ConsumeModal extends ModalSubmit {
   constructor() {
-    super('consume');
+    super({ customId: "consume", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: consume:<docId>
@@ -40,7 +40,4 @@ export default class ConsumeModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -4,7 +4,13 @@ import logger from "../utilities/Logger";
 
 export default class TestCommand extends SlashCommand {
   constructor() {
-    super('test', 'dev command', 'Developer');
+    super({
+      name: "test",
+      description: "dev command",
+      category: "Developer",
+      cooldown: 5,
+      isGlobalCommand: false
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -27,13 +33,5 @@ export default class TestCommand extends SlashCommand {
     }
 
     await interaction.editReply({ content: `\`${factId}\`\n${text}` });
-  }
-
-  public isGlobalCommand(): boolean {
-    return false;
-  }
-
-  public cooldown(): number {
-    return 5;
   }
 }

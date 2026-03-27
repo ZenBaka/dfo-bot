@@ -19,7 +19,13 @@ const CATEGORY_COLORS: Record<string, number> = {
 
 export default class HelpCommand extends SlashCommand {
   constructor() {
-    super('help', 'View all available commands and how to get started', 'General');
+    super({
+      name: "help",
+      description: "View all available commands and how to get started",
+      category: "General",
+      cooldown: 3,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -83,13 +89,5 @@ export default class HelpCommand extends SlashCommand {
       .setIdleTimeout(120_000); // 2 minutes for help browsing
 
     await paginator.start(interaction);
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 3;
   }
 }

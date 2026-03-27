@@ -8,7 +8,7 @@ import type { ITaskJSON } from "../../interfaces/IGameJSON";
 
 export default class TasksTabButton extends Button {
   constructor() {
-    super('tasks_tab');
+    super({ customId: "tasks_tab", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: tasks_tab:<period>
@@ -78,7 +78,4 @@ export default class TasksTabButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

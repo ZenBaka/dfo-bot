@@ -7,7 +7,7 @@ import ItemManager from "../../managers/ItemManager";
 
 export default class MarketSellModal extends ModalSubmit {
   constructor() {
-    super('mkt_sell_modal');
+    super({ customId: "mkt_sell_modal", cooldown: 5, isAuthorOnly: true });
   }
 
   // customId format: mkt_sell_modal:<docId>:<itemId>
@@ -77,7 +77,4 @@ export default class MarketSellModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

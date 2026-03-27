@@ -5,7 +5,7 @@ import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class MarketBuyButton extends Button {
-  constructor() { super('mkt_buy'); }
+  constructor() { super({ customId: "mkt_buy", cooldown: 3, isAuthorOnly: false }); }
 
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -35,7 +35,4 @@ export default class MarketBuyButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isAuthorOnly(): boolean { return false; }
-  public cooldown(): number { return 3; }
 }

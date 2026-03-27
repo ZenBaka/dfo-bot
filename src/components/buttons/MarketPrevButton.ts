@@ -6,15 +6,12 @@ import Routes from "../../utilities/Routes";
 import MarketImageBuilder, { type MarketListing, type MarketPageConfig } from "../../utilities/MarketImageBuilder";
 
 export default class MarketPrevButton extends Button {
-  constructor() { super('mkt_prev'); }
+  constructor() { super({ customId: "mkt_prev", cooldown: 2, isAuthorOnly: true }); }
 
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
     await interaction.deferUpdate();
     await handleMarketPage(interaction, args, -1);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }
 
 /**

@@ -12,8 +12,14 @@ import type { ITaskJSON } from "../interfaces/IGameJSON";
 
 export default class TasksCommand extends SlashCommand {
   constructor() {
-    super('tasks', 'View your active tasks and claim rewards', 'Gaming');
-    this.data.addStringOption((o) =>
+    super({
+      name: "tasks",
+      description: "View your active tasks and claim rewards",
+      category: "Gaming",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
+    this.builder.addStringOption((o) =>
       o.setName('period')
         .setDescription('Task period to view')
         .setRequired(false)
@@ -104,7 +110,4 @@ export default class TasksCommand extends SlashCommand {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

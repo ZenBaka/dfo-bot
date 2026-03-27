@@ -18,7 +18,7 @@ const SECTION_ORDER = ['basics', 'combat', 'workshop', 'economy', 'tasks', 'zone
 
 export default class GuideNavButton extends Button {
   constructor() {
-    super('guide_nav');
+    super({ customId: "guide_nav", cooldown: 1, isAuthorOnly: false });
   }
 
   // customId format: guide_nav:<sectionKey>
@@ -31,8 +31,5 @@ export default class GuideNavButton extends Button {
       content: `📖 Use \`/guide ${section}\` to view the **${SECTIONS[section]?.title ?? section}** section.`,
       ephemeral: true,
     });
-  }
-
-  public isAuthorOnly(): boolean { return false; } // Anyone can navigate the guide
-  public cooldown(): number { return 1; }
+  } // Anyone can navigate the guide
 }

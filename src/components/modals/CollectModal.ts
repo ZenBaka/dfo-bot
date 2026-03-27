@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class CollectModal extends ModalSubmit {
   constructor() {
-    super('collect');
+    super({ customId: "collect", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: collect:<docId>
@@ -40,7 +40,4 @@ export default class CollectModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code), components: [], files: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

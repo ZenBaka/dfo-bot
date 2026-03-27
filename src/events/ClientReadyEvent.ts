@@ -7,7 +7,10 @@ import PresenceManager from "../managers/PresenceManager";
 
 export default class ClientReadyEvent extends Event {
   constructor() {
-    super('clientReady'); 
+    super({
+      name: 'clientReady',
+      isOnce: true
+    });
   }
 
   public async execute(client: Client) {
@@ -32,9 +35,5 @@ export default class ClientReadyEvent extends Event {
         // Start rotating presence after items are loaded
         await PresenceManager.init(client);
     }, delayMs);
-  }
-
-  public isOnce(): boolean {
-    return true;
   }
 }

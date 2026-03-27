@@ -9,7 +9,7 @@ import type { IPlayerJSON } from "../../interfaces/IPlayerJSON";
 
 export default class InvSelectMenu extends SelectMenu {
   constructor() {
-    super('inv_select');
+    super({ customId: "inv_select", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: inv_select:<pageOffset> — value is the _id of the selected item
@@ -34,8 +34,8 @@ export default class InvSelectMenu extends SelectMenu {
         return;
       }
 
-      const inventory: IInventoryItem[] = body.data.inventory || [];
-      const player: IPlayerJSON = body.data.player;
+      const inventory: IInventoryItem[] = body.builder.inventory || [];
+      const player: IPlayerJSON = body.builder.player;
 
       // Find the exact item by _id
       const item = inventory.find((inv: IInventoryItem) => inv._id === docId);
@@ -52,7 +52,4 @@ export default class InvSelectMenu extends SelectMenu {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

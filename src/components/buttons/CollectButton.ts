@@ -3,7 +3,7 @@ import Button from "../../structures/Button";
 
 export default class CollectButton extends Button {
   constructor() {
-    super('collect');
+    super({ customId: "collect", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: collect:<docId>:<maxQuantity>
@@ -22,7 +22,4 @@ export default class CollectButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

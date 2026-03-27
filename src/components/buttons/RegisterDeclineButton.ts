@@ -2,7 +2,7 @@ import { ButtonInteraction, Client } from "discord.js";
 import Button from "../../structures/Button";
 
 export default class RegisterDeclineButton extends Button {
-  constructor() { super('register_decline'); }
+  constructor() { super({ customId: "register_decline", cooldown: 3, isAuthorOnly: true }); }
 
   public async execute(interaction: ButtonInteraction, client: Client): Promise<void> {
     await interaction.deferUpdate();
@@ -13,7 +13,4 @@ export default class RegisterDeclineButton extends Button {
       components: [],
     });
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -5,7 +5,7 @@ import { formatError } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class SkillPointsModal extends ModalSubmit {
-  constructor() { super('skillpoints_modal'); }
+  constructor() { super({ customId: "skillpoints_modal", cooldown: 5, isAuthorOnly: true }); }
 
   public async execute(interaction: ModalSubmitInteraction, client: Client): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -67,7 +67,4 @@ export default class SkillPointsModal extends ModalSubmit {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

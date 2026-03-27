@@ -7,7 +7,7 @@ import { formatError, formatCooldown } from "../../utilities/ErrorMessages";
 import Routes from "../../utilities/Routes";
 
 export default class AttackButton extends Button {
-  constructor() { super('attack'); }
+  constructor() { super({ customId: "attack", cooldown: 1.8, isAuthorOnly: false }); }
 
   public async execute(interaction: ButtonInteraction, client: Client): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -32,7 +32,4 @@ export default class AttackButton extends Button {
     const response = await buildCombatResponse(data);
     await interaction.editReply(response);
   }
-
-  public isAuthorOnly(): boolean { return false; }
-  public cooldown(): number { return 1.8; }
 }

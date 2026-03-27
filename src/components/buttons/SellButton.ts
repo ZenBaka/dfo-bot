@@ -3,7 +3,7 @@ import Button from "../../structures/Button";
 
 export default class SellButton extends Button {
   constructor() {
-    super('sell');
+    super({ customId: "sell", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: sell:<docId>:<maxQuantity>
@@ -22,7 +22,4 @@ export default class SellButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

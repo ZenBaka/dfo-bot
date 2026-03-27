@@ -10,7 +10,10 @@ import { ApiError } from "../utilities/ApiClient";
 
 export default class InteractionCreateEvent extends Event {
   constructor() {
-    super('interactionCreate');
+    super({
+      name: 'interactionCreate',
+      isOnce: false
+    });
   }
 
   private async handleError(interaction: BaseInteraction, err: any) {
@@ -58,9 +61,5 @@ export default class InteractionCreateEvent extends Event {
     } catch (err) {
       await this.handleError(interaction, err);
     }
-  }
-
-  public isOnce(): boolean {
-    return false;
   }
 }

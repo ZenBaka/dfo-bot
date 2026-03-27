@@ -7,7 +7,7 @@ import Button from "../../structures/Button";
 
 export default class ReforgeButton extends Button {
   constructor() {
-    super('reforge');
+    super({ customId: "reforge", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: reforge:<docId>:<itemId>
@@ -49,7 +49,4 @@ export default class ReforgeButton extends Button {
       ephemeral: true,
     });
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

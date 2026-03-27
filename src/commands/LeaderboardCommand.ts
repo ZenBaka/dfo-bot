@@ -46,9 +46,15 @@ const STAT_DISPLAY: Record<string, LeaderboardConfig> = {
 
 export default class LeaderboardCommand extends SlashCommand {
   constructor() {
-    super('leaderboard', 'View the top players', 'General');
+    super({
+      name: "leaderboard",
+      description: "View the top players",
+      category: "General",
+      cooldown: 10,
+      isGlobalCommand: true
+    });
 
-    this.data.addStringOption((o) =>
+    this.builder.addStringOption((o) =>
       o.setName('stat')
         .setDescription('Which stat to rank by')
         .setChoices(STAT_OPTIONS)
@@ -105,13 +111,5 @@ export default class LeaderboardCommand extends SlashCommand {
     } catch (err: any) {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 10;
   }
 }

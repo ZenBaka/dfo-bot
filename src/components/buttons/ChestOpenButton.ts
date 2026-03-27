@@ -11,7 +11,7 @@ const RARITY_EMOJIS: Record<string, string> = {
 
 export default class ChestOpenButton extends Button {
   constructor() {
-    super('chest_open');
+    super({ customId: "chest_open", cooldown: 3, isAuthorOnly: true });
   }
 
   // customId format: chest_open:<chestId>
@@ -64,7 +64,4 @@ export default class ChestOpenButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

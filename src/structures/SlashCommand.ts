@@ -1,44 +1,51 @@
 import { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import IExecutable from "../interfaces/IExecutable";
-import ICooldown from "../interfaces/ICooldown";
 import { Client } from "discord.js";
 
-export default abstract class SlashCommand implements IExecutable, ICooldown {
-  protected name: string;
-  protected description: string;
-  protected category: string;
-  protected data: SlashCommandBuilder;
+export interface SlashCommandOptions {
+  name: string;
+  description: string;
+  category: string;
+  cooldown: number;
+  isGlobalCommand: boolean;
+}
 
-  constructor(name: string, description: string, category: string) {
-    this.name = name;
-    this.description = description;
-    this.category = category;
-    this.data = new SlashCommandBuilder()
-      .setName(name)
-      .setDescription(description);
+export default abstract class SlashCommand implements IExecutable {
+  private readonly options: SlashCommandOptions;
+  protected builder: SlashCommandBuilder;
+
+  constructor(options: SlashCommandOptions) {
+    this.options = options;
+    this.builder = new SlashCommandBuilder()
+      .setName(options.name)
+      .setDescription(options.description);
+  }
+
+  public get name(): string {
+    return this.options.name;
+  }
+
+  public get description(): string {
+    return this.options.description;
+  }
+
+  public get category(): string {
+    return this.options.category;
+  }
+
+  public get cooldown(): number {
+    return this.options.cooldown;
+  }
+
+  public get isGlobalCommand(): boolean {
+    return this.options.isGlobalCommand;
+  }
+
+  public get data(): SlashCommandBuilder {
+    return this.builder;
   }
 
   public abstract execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void>;
 
-  public abstract cooldown(): number;
-
-  public abstract isGlobalCommand(): boolean;
-
   public async autocomplete?(interaction: AutocompleteInteraction, client: Client): Promise<void>;
-
-  public getData(): SlashCommandBuilder {
-    return this.data;
-  }
-
-  public getName(): string {
-    return this.name;
-  }
-
-  public getDescription(): string {
-    return this.description;
-  }
-
-  public getCategory(): string {
-    return this.category;
-  }
 }

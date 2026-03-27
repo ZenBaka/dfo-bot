@@ -1,17 +1,24 @@
 import IExecutable from "../interfaces/IExecutable";
 
-export default abstract class Event implements IExecutable {
-  protected name: string;
+export interface EventOptions {
+  name: string;
+  isOnce: boolean;
+}
 
-  constructor(name: string) {
-    this.name = name;
+export default abstract class Event implements IExecutable {
+  private readonly options: EventOptions;
+
+  constructor(options: EventOptions) {
+    this.options = options;
+  }
+
+  public get name(): string {
+    return this.options.name;
+  }
+
+  public get isOnce(): boolean {
+    return this.options.isOnce;
   }
 
   public abstract execute(...args: any[]): Promise<void>;
-
-  public abstract isOnce(): boolean;
-
-  public getName(): string {
-    return this.name;
-  }
 }

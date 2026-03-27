@@ -90,10 +90,10 @@ export default class PaginatorBuilder {
     const getEmbed = (index: number) => {
       const originalEmbed = this.pages[index];
       const embed = EmbedBuilder.from(originalEmbed);
-      const currentFooter = originalEmbed.data.footer?.text || '';
+      const currentFooter = originalEmbed.builder.footer?.text || '';
       return embed.setFooter({ 
         text: (currentFooter ? `${currentFooter} | Page ${index + 1} of ${this.pages.length}` : `Page ${index + 1} of ${this.pages.length}`) + ' | ⚔️ DFO Cross-Platform',
-        iconURL: originalEmbed.data.footer?.icon_url
+        iconURL: originalEmbed.builder.footer?.icon_url
       });
     };
 

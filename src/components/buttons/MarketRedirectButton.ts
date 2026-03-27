@@ -3,7 +3,7 @@ import Button from "../../structures/Button";
 
 export default class MarketRedirectButton extends Button {
   constructor() {
-    super('market_redirect');
+    super({ customId: "market_redirect", cooldown: 2, isAuthorOnly: true });
   }
 
   // customId format: market_redirect:<itemId>
@@ -15,7 +15,4 @@ export default class MarketRedirectButton extends Button {
       flags: MessageFlags.Ephemeral,
     });
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 2; }
 }

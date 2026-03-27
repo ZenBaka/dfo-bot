@@ -6,7 +6,7 @@ import Routes from "../../utilities/Routes";
 
 export default class RestButton extends Button {
   constructor() {
-    super('rest');
+    super({ customId: "rest", cooldown: 5, isAuthorOnly: true });
   }
 
   public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
@@ -37,7 +37,4 @@ export default class RestButton extends Button {
       await interaction.editReply({ content: formatError(err.message, err.code), files: [], components: [], embeds: [] });
     }
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

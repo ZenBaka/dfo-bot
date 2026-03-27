@@ -11,7 +11,13 @@ import ImageService from "../utilities/ImageService";
 
 export default class TravelCommand extends SlashCommand {
   constructor() {
-    super('travel', 'View the zone map and travel to a different zone', 'Gaming');
+    super({
+      name: "travel",
+      description: "View the zone map and travel to a different zone",
+      category: "Gaming",
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
   public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
@@ -70,7 +76,4 @@ export default class TravelCommand extends SlashCommand {
       await interaction.editReply({ content: formatError(err.message, err.code) });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

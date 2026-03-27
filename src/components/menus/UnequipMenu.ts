@@ -9,7 +9,7 @@ import { EquipmentSlot } from "../../interfaces/IItemJSON";
 
 export default class UnequipMenu extends SelectMenu {
   constructor() {
-    super('unequip');
+    super({ customId: "unequip", cooldown: 2, isAuthorOnly: true });
   }
 
   public async execute(interaction: AnySelectMenuInteraction, client: Client, args?: string[] | null): Promise<void> {
@@ -65,13 +65,5 @@ export default class UnequipMenu extends SelectMenu {
       await interaction.editReply({ content: 'Unknown error!', components: [], embeds: [], files: [] });
       return;
     }
-  }
-
-  public isAuthorOnly(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 2;
   }
 }
