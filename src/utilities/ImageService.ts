@@ -23,7 +23,9 @@ function serializeItemCache(): Record<number, IItemJSON> {
   return cache;
 }
 
-export async function adventure(data: IStepJSON | ICombatJSON): Promise<Buffer> {
+export async function adventure(
+  data: IStepJSON | ICombatJSON
+): Promise<Buffer> {
   return WorkerPool.run('adventure', { data });
 }
 

@@ -13,6 +13,7 @@ import { formatError } from '../utilities/ErrorMessages';
 import * as Routes from '../utilities/Routes';
 import * as ImageService from '../utilities/ImageService';
 import type { IChestSlot } from '../interfaces/IGameJSON';
+import { chunkArray } from '../utilities/helpers';
 
 export default class ChestsCommand extends SlashCommand {
   constructor() {
@@ -139,12 +140,4 @@ export default class ChestsCommand extends SlashCommand {
       });
     }
   }
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
 }

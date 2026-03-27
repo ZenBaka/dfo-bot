@@ -21,6 +21,7 @@ import {
 import * as ImageService from '../utilities/ImageService';
 import * as ItemManager from '../managers/ItemManager';
 import type { IInventoryItem } from '../interfaces/IInventoryJSON';
+import { chunkArray } from '../utilities/helpers';
 
 const RARITY_CHOICES = [
   { name: 'All', value: 'All' },
@@ -428,12 +429,4 @@ function buildMarketButtons(
   }
 
   return rows;
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
 }
