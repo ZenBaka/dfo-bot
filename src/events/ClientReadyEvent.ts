@@ -1,19 +1,24 @@
-import { Client } from "discord.js";
-import Event from "../structures/Event";
-import logger from "../utilities/Logger";
-import ItemManager from "../managers/ItemManager";
-import WorkerPool from "../utilities/WorkerPool";
-import PresenceManager from "../managers/PresenceManager";
+import { type Client } from 'discord.js';
+import Event from '../structures/Event';
+import logger from '../utilities/Logger';
+import * as ItemManager from '../managers/ItemManager';
+import * as WorkerPool from '../utilities/WorkerPool';
+import * as PresenceManager from '../managers/PresenceManager';
 
 export default class ClientReadyEvent extends Event {
   constructor() {
-    super('clientReady'); 
+    super({
+      name: 'clientReady',
+      isOnce: true
+    });
   }
 
-  public async execute(client: Client) {
+  public async execute(client: Client): Promise<void> {
     // Use cluster id from hybrid sharding, fallback to shard id
     const clusterId = (client as any).cluster?.id ?? client.shard?.ids[0] ?? 0;
-    logger.info(`[${this.constructor.name}] Successfully logged in as ${client.user?.tag}! (Cluster ${clusterId})`);
+    logger.info(
+      `[${this.constructor.name}] Successfully logged in as ${client.user?.tag}! (Cluster ${clusterId})`
+    );
 
     // CRITICAL: Signal to the ClusterManager that this cluster is ready
     // Without this, the manager will timeout waiting for this cluster
@@ -23,18 +28,16 @@ export default class ClientReadyEvent extends Event {
     WorkerPool.init();
 
     // Stagger API requests by cluster ID to prevent slamming capi.gg
-    const delayMs = 1500 + (clusterId * 2500); 
-    
+    const delayMs = 1500 + clusterId * 2500;
+
     setTimeout(async () => {
-        logger.info(`[Cluster ${clusterId}] Initiating staggered ItemManager sync...`);
-        await ItemManager.refresh();
+      logger.info(
+        `[Cluster ${clusterId}] Initiating staggered ItemManager sync...`
+      );
+      await ItemManager.refresh();
 
-        // Start rotating presence after items are loaded
-        await PresenceManager.init(client);
+      // Start rotating presence after items are loaded
+      await PresenceManager.init(client);
     }, delayMs);
-  }
-
-  public isOnce(): boolean {
-    return true;
   }
 }

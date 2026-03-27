@@ -1,5 +1,5 @@
-import { IEnemyJSON } from "./IEnemyJSON";
-import { IItemJSON } from "./IItemJSON";
+import { type IEnemyJSON } from './IEnemyJSON';
+import { type IItemJSON } from './IItemJSON';
 
 export interface IStepJSON {
   success: boolean;
@@ -20,8 +20,8 @@ export interface IStepRewardsJSON {
   gold: number;
   item: IItemJSON | null;
   levelsGained: number;
-  chestDrop: string | null;   // Chest tier found while exploring
-  toll: number;               // Zone toll deducted this step
+  chestDrop: string | null; // Chest tier found while exploring
+  toll: number; // Zone toll deducted this step
 }
 
 export interface IActiveBonuses {

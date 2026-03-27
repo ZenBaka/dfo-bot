@@ -1,23 +1,38 @@
 import {
-  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle,
-  ChatInputCommandInteraction, Client, EmbedBuilder, MessageFlags,
-  StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
-} from "discord.js";
-import SlashCommand from "../structures/SlashCommand";
-import { apiFetch } from "../utilities/ApiClient";
-import { formatError } from "../utilities/ErrorMessages";
-import Routes from "../utilities/Routes";
-import { type MarketListing, type MarketPageConfig } from "../utilities/MarketImageBuilder";
-import ImageService from "../utilities/ImageService";
-import ItemManager from "../managers/ItemManager";
-import type { IInventoryItem } from "../interfaces/IInventoryJSON";
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  type ChatInputCommandInteraction,
+  type Client,
+  EmbedBuilder,
+  MessageFlags,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder
+} from 'discord.js';
+import SlashCommand from '../structures/SlashCommand';
+import { apiFetch } from '../utilities/ApiClient';
+import { formatError } from '../utilities/ErrorMessages';
+import * as Routes from '../utilities/Routes';
+import {
+  type MarketListing,
+  type MarketPageConfig
+} from '../utilities/MarketImageBuilder';
+import * as ImageService from '../utilities/ImageService';
+import * as ItemManager from '../managers/ItemManager';
+import type { IInventoryItem } from '../interfaces/IInventoryJSON';
+import { chunkArray } from '../utilities/helpers';
 
 const RARITY_CHOICES = [
   { name: 'All', value: 'All' },
-  { name: 'Common', value: 'Common' }, { name: 'Uncommon', value: 'Uncommon' },
-  { name: 'Rare', value: 'Rare' }, { name: 'Elite', value: 'Elite' },
-  { name: 'Epic', value: 'Epic' }, { name: 'Legendary', value: 'Legendary' },
-  { name: 'Divine', value: 'Divine' }, { name: 'Exotic', value: 'Exotic' },
+  { name: 'Common', value: 'Common' },
+  { name: 'Uncommon', value: 'Uncommon' },
+  { name: 'Rare', value: 'Rare' },
+  { name: 'Elite', value: 'Elite' },
+  { name: 'Epic', value: 'Epic' },
+  { name: 'Legendary', value: 'Legendary' },
+  { name: 'Divine', value: 'Divine' },
+  { name: 'Exotic', value: 'Exotic' }
 ];
 
 const SORT_CHOICES = [
@@ -27,52 +42,90 @@ const SORT_CHOICES = [
   { name: 'Level: High → Low', value: 'level_desc' },
   { name: 'Highest ATK', value: 'atk_desc' },
   { name: 'Highest DEF', value: 'def_desc' },
-  { name: 'Highest HP', value: 'hp_desc' },
+  { name: 'Highest HP', value: 'hp_desc' }
 ];
 
 const TYPE_CHOICES = [
   { name: 'All', value: 'All' },
-  { name: 'Weapon', value: 'Weapon' }, { name: 'Armor', value: 'Armor' },
-  { name: 'Accessory', value: 'Accessory' }, { name: 'Consumable', value: 'Consumable' },
+  { name: 'Weapon', value: 'Weapon' },
+  { name: 'Armor', value: 'Armor' },
+  { name: 'Accessory', value: 'Accessory' },
+  { name: 'Consumable', value: 'Consumable' }
 ];
 
 export const SELL_PAGE_SIZE = 25;
 
 export default class MarketCommand extends SlashCommand {
   constructor() {
-    super('market', 'Browse and trade on the Global Market', 'Gaming');
+    super({
+      name: 'market',
+      description: 'Browse and trade on the Global Market',
+      category: 'Gaming',
+      cooldown: 5,
+      isGlobalCommand: true
+    });
 
     this.data
-      .addSubcommand((sub) =>
-        sub.setName('browse')
-          .setDescription('Browse items for sale on the Global Market')
-          .addStringOption((o) => o.setName('search').setDescription('Search by item name').setRequired(false))
-          .addStringOption((o) => o.setName('rarity').setDescription('Filter by rarity').setChoices(RARITY_CHOICES).setRequired(false))
-          .addStringOption((o) => o.setName('type').setDescription('Filter by item type').setChoices(TYPE_CHOICES).setRequired(false))
-          .addStringOption((o) => o.setName('sort').setDescription('Sort order').setChoices(SORT_CHOICES).setRequired(false))
+      .addSubcommand((sub) => sub
+        .setName('browse')
+        .setDescription('Browse items for sale on the Global Market')
+        .addStringOption((o) => o
+          .setName('search')
+          .setDescription('Search by item name')
+          .setRequired(false)
+        )
+        .addStringOption((o) => o
+          .setName('rarity')
+          .setDescription('Filter by rarity')
+          .setChoices(RARITY_CHOICES)
+          .setRequired(false)
+        )
+        .addStringOption((o) => o
+          .setName('type')
+          .setDescription('Filter by item type')
+          .setChoices(TYPE_CHOICES)
+          .setRequired(false)
+        )
+        .addStringOption((o) => o
+          .setName('sort')
+          .setDescription('Sort order')
+          .setChoices(SORT_CHOICES)
+          .setRequired(false)
+        )
       )
-      .addSubcommand((sub) =>
-        sub.setName('listings')
-          .setDescription('View your active market listings')
+      .addSubcommand((sub) => sub
+        .setName('listings')
+        .setDescription('View your active market listings')
       )
-      .addSubcommand((sub) =>
-        sub.setName('sell')
-          .setDescription('Select an item from your inventory to list on the market')
+      .addSubcommand((sub) => sub
+        .setName('sell')
+        .setDescription(
+          'Select an item from your inventory to list on the market'
+        )
       );
   }
 
-  public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
+  public async execute(
+    interaction: ChatInputCommandInteraction,
+    client: Client
+  ): Promise<void> {
     const sub = interaction.options.getSubcommand(true);
     const discordId = interaction.user.id;
 
     switch (sub) {
-      case 'browse': return this.handleBrowse(interaction, discordId);
-      case 'listings': return this.handleListings(interaction, discordId);
-      case 'sell': return this.handleSell(interaction, discordId);
+    case 'browse':
+      return this.handleBrowse(interaction, discordId);
+    case 'listings':
+      return this.handleListings(interaction, discordId);
+    case 'sell':
+      return this.handleSell(interaction, discordId);
     }
   }
 
-  private async handleBrowse(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
+  private async handleBrowse(
+    interaction: ChatInputCommandInteraction,
+    discordId: string
+  ): Promise<void> {
     await interaction.deferReply();
 
     const search = interaction.options.getString('search') ?? '';
@@ -81,32 +134,65 @@ export default class MarketCommand extends SlashCommand {
     const sort = interaction.options.getString('sort') ?? 'newest';
 
     try {
-      const res = await apiFetch(Routes.marketBrowse(discordId, { page: 1, search: search || undefined, rarity, type, sort }));
+      const res = await apiFetch(
+        Routes.marketBrowse(discordId, {
+          page: 1,
+          search: search || undefined,
+          rarity,
+          type,
+          sort
+        })
+      );
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to load market') });
+        await interaction.editReply({
+          content: formatError(body.error ?? 'Failed to load market')
+        });
         return;
       }
 
       const listings: MarketListing[] = body.data;
       const pagination = body.pagination;
-      const config: MarketPageConfig = { page: pagination.page, totalPages: pagination.totalPages, totalItems: pagination.totalItems, mode: 'browse' };
+      const config: MarketPageConfig = {
+        page: pagination.page,
+        totalPages: pagination.totalPages,
+        totalItems: pagination.totalItems,
+        mode: 'browse'
+      };
 
       const imageBuffer = await ImageService.market(listings, config);
-      const attachment = new AttachmentBuilder(imageBuffer, { name: 'market.png' });
-      const embed = new EmbedBuilder().setColor(0x10b981).setImage('attachment://market.png');
+      const attachment = new AttachmentBuilder(imageBuffer, {
+        name: 'market.png'
+      });
+      const embed = new EmbedBuilder()
+        .setColor(0x10b981)
+        .setImage('attachment://market.png');
 
       const filterKey = `${(search || '').slice(0, 30)}|${rarity}|${type}|${sort}`;
-      const components = buildMarketButtons(listings, config, filterKey, 'browse');
+      const components = buildMarketButtons(
+        listings,
+        config,
+        filterKey,
+        'browse'
+      );
 
-      await interaction.editReply({ embeds: [embed], files: [attachment], components });
+      await interaction.editReply({
+        embeds: [embed],
+        files: [attachment],
+        components
+      });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code) });
+      await interaction.editReply({
+        content: formatError(err.message, err.code)
+      });
     }
   }
 
-  private async handleListings(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
+  private async handleListings(
+    interaction: ChatInputCommandInteraction,
+    discordId: string
+  ): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
@@ -114,46 +200,73 @@ export default class MarketCommand extends SlashCommand {
       const body = await res.json();
 
       if (!res.ok || !body.success) {
-        await interaction.editReply({ content: formatError(body.error ?? 'Failed to load your listings') });
+        await interaction.editReply({
+          content: formatError(body.error ?? 'Failed to load your listings')
+        });
         return;
       }
 
       const listings: MarketListing[] = body.data;
       const pagination = body.pagination;
-      const config: MarketPageConfig = { page: pagination.page, totalPages: pagination.totalPages, totalItems: pagination.totalItems, mode: 'my_listings' };
+      const config: MarketPageConfig = {
+        page: pagination.page,
+        totalPages: pagination.totalPages,
+        totalItems: pagination.totalItems,
+        mode: 'my_listings'
+      };
 
       const imageBuffer = await ImageService.market(listings, config);
-      const attachment = new AttachmentBuilder(imageBuffer, { name: 'my_listings.png' });
-      const embed = new EmbedBuilder().setColor(0x3b82f6).setImage('attachment://my_listings.png');
+      const attachment = new AttachmentBuilder(imageBuffer, {
+        name: 'my_listings.png'
+      });
+      const embed = new EmbedBuilder()
+        .setColor(0x3b82f6)
+        .setImage('attachment://my_listings.png');
 
-      const components = buildMarketButtons(listings, config, '', 'my_listings');
+      const components = buildMarketButtons(
+        listings,
+        config,
+        '',
+        'my_listings'
+      );
 
-      await interaction.editReply({ embeds: [embed], files: [attachment], components });
+      await interaction.editReply({
+        embeds: [embed],
+        files: [attachment],
+        components
+      });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code) });
+      await interaction.editReply({
+        content: formatError(err.message, err.code)
+      });
     }
   }
 
-  private async handleSell(interaction: ChatInputCommandInteraction, discordId: string): Promise<void> {
+  private async handleSell(
+    interaction: ChatInputCommandInteraction,
+    discordId: string
+  ): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
       const result = await buildSellPage(discordId, 0);
       await interaction.editReply(result);
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code) });
+      await interaction.editReply({
+        content: formatError(err.message, err.code)
+      });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }
 
 /**
  * Builds a paginated sell page with select menu + prev/next buttons.
  * Shared by MarketCommand.handleSell and MarketSellPageButton.
  */
-export async function buildSellPage(discordId: string, page: number): Promise<{ content: string; components: ActionRowBuilder<any>[] }> {
+export async function buildSellPage(
+  discordId: string,
+  page: number
+): Promise<{ content: string; components: ActionRowBuilder<any>[] }> {
   const res = await apiFetch(Routes.inventory(discordId));
   const body = await res.json();
 
@@ -164,7 +277,10 @@ export async function buildSellPage(discordId: string, page: number): Promise<{ 
   const inventory: IInventoryItem[] = body.data?.inventory || [];
 
   if (inventory.length === 0) {
-    return { content: '🎒 Your inventory is empty — nothing to sell!', components: [] };
+    return {
+      content: '🎒 Your inventory is empty — nothing to sell!',
+      components: []
+    };
   }
 
   const sellable = inventory.filter((inv: IInventoryItem) => {
@@ -175,12 +291,19 @@ export async function buildSellPage(discordId: string, page: number): Promise<{ 
   });
 
   if (sellable.length === 0) {
-    return { content: '❌ No sellable items. Unlock or acquire non-consumable items first.', components: [] };
+    return {
+      content:
+        '❌ No sellable items. Unlock or acquire non-consumable items first.',
+      components: []
+    };
   }
 
   const totalPages = Math.ceil(sellable.length / SELL_PAGE_SIZE);
   const safePage = Math.max(0, Math.min(page, totalPages - 1));
-  const pageItems = sellable.slice(safePage * SELL_PAGE_SIZE, (safePage + 1) * SELL_PAGE_SIZE);
+  const pageItems = sellable.slice(
+    safePage * SELL_PAGE_SIZE,
+    (safePage + 1) * SELL_PAGE_SIZE
+  );
 
   const options: StringSelectMenuOptionBuilder[] = [];
   for (const inv of pageItems) {
@@ -188,13 +311,18 @@ export async function buildSellPage(discordId: string, page: number): Promise<{ 
     if (!def) continue;
 
     const enhTag = inv.enhanceLevel > 0 ? ` +${inv.enhanceLevel}` : '';
-    const modTag = (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides) ? ' ✨' : '';
+    const modTag =
+      inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides
+        ? ' ✨'
+        : '';
     const value = def.value || 0;
 
     options.push(
       new StringSelectMenuOptionBuilder()
         .setLabel(`${def.name}${enhTag} (x${inv.quantity})${modTag}`)
-        .setDescription(`${def.rarity} ${def.type} • Lvl ${def.level} • Base: ${value.toLocaleString()}g`)
+        .setDescription(
+          `${def.rarity} ${def.type} • Lvl ${def.level} • Base: ${value.toLocaleString()}g`
+        )
         .setValue(`${inv._id}:${inv.itemId}:${inv.quantity}`)
     );
   }
@@ -209,7 +337,9 @@ export async function buildSellPage(discordId: string, page: number): Promise<{ 
       .setMaxValues(1)
       .addOptions(options);
 
-    components.push(new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(selectMenu));
+    components.push(
+      new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(selectMenu)
+    );
   }
 
   if (totalPages > 1) {
@@ -228,14 +358,15 @@ export async function buildSellPage(discordId: string, page: number): Promise<{ 
         .setCustomId(`mkt_sell_page:${safePage + 1}`)
         .setLabel('Next ▶')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(safePage >= totalPages - 1),
+        .setDisabled(safePage >= totalPages - 1)
     );
     components.push(navRow);
   }
 
-  const header = totalPages > 1
-    ? `🏪 **Select an item to sell** (Page ${safePage + 1}/${totalPages} • ${sellable.length} items)`
-    : `🏪 **Select an item to sell** (${sellable.length} items)`;
+  const header =
+    totalPages > 1
+      ? `🏪 **Select an item to sell** (Page ${safePage + 1}/${totalPages} • ${sellable.length} items)`
+      : `🏪 **Select an item to sell** (${sellable.length} items)`;
 
   return { content: header, components };
 }
@@ -257,9 +388,8 @@ function buildMarketButtons(
     for (const chunk of chunks.slice(0, 2)) {
       const row = new ActionRowBuilder<ButtonBuilder>();
 
-      for (let i = 0; i < chunk.length; i++) {
-        const globalIndex = listings.indexOf(chunk[i]);
-        const listing = chunk[i];
+      for (const listing of chunk) {
+        const globalIndex = listings.indexOf(listing);
 
         if (isBrowse) {
           row.addComponents(
@@ -293,18 +423,10 @@ function buildMarketButtons(
         .setCustomId(`mkt_next:${config.page}:${filterKey}:${mode}`)
         .setLabel('Next ▶')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(config.page >= config.totalPages),
+        .setDisabled(config.page >= config.totalPages)
     );
     rows.push(navRow);
   }
 
   return rows;
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
 }

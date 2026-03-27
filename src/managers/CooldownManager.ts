@@ -1,38 +1,34 @@
-import { Collection } from "discord.js";
+import { Collection } from 'discord.js';
 
-export default class CooldownManager {
-  private static _cache: Collection<string, number> = new Collection();
+const _cache: Collection<string, number> = new Collection();
+const _interval = setInterval(() => prune(), 60_000);
 
-  private static _interval = setInterval(() => this.prune(), 60_000);
+export function onCooldown(key: string): boolean {
+  const expiration = _cache.get(key);
+  if (!expiration) return false;
 
-  public static onCooldown(key: string): boolean {
-    const expiration = this._cache.get(key);
-    if (!expiration) return false;
-
-    if (expiration > Date.now()) {
-      return true;
-    } else {
-      this._cache.delete(key);
-      return false;
-    }
+  if (expiration > Date.now()) {
+    return true;
   }
+  _cache.delete(key);
+  return false;
+}
 
-  public static getExpiration(key: string): number {
-    const expiration = this._cache.get(key);
-    if (!expiration) return Math.floor(Date.now() / 1000);
+export function getExpiration(key: string): number {
+  const expiration = _cache.get(key);
+  if (!expiration) return Math.floor(Date.now() / 1000);
 
-    return Math.floor(expiration / 1000);
-  }
+  return Math.floor(expiration / 1000);
+}
 
-  public static addCooldown(key: string, durationInSeconds: number): void {
-    if (this.onCooldown(key)) return;
+export function addCooldown(key: string, durationInSeconds: number): void {
+  if (onCooldown(key)) return;
 
-    const expiresAt = Date.now() + (durationInSeconds * 1000);
-    this._cache.set(key, expiresAt);
-  }
+  const expiresAt = Date.now() + durationInSeconds * 1000;
+  _cache.set(key, expiresAt);
+}
 
-  private static prune(): void {
-    const now = Date.now();
-    this._cache.sweep((expiration) => expiration <= now);
-  }
+function prune(): void {
+  const now = Date.now();
+  _cache.sweep((expiration) => expiration <= now);
 }

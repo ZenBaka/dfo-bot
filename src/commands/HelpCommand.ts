@@ -1,42 +1,54 @@
-import { ChatInputCommandInteraction, Client, EmbedBuilder, Colors } from "discord.js";
-import SlashCommand from "../structures/SlashCommand";
-import SlashCommandHandler from "../handlers/SlashCommandHandler";
-import PaginatorBuilder from "../utilities/PaginatorBuilder";
+import {
+  type ChatInputCommandInteraction,
+  type Client,
+  EmbedBuilder,
+  Colors
+} from 'discord.js';
+import SlashCommand from '../structures/SlashCommand';
+import * as SlashCommandHandler from '../handlers/SlashCommandHandler';
+import PaginatorBuilder from '../utilities/PaginatorBuilder';
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'General': '📋',
-  'Gaming': '⚔️',
-  'Moderator': '🛡️',
-  'Developer': '🔧',
+  General: '📋',
+  Gaming: '⚔️',
+  Moderator: '🛡️',
+  Developer: '🔧'
 };
 
 const CATEGORY_COLORS: Record<string, number> = {
-  'General': 0x3b82f6,
-  'Gaming': 0xef4444,
-  'Moderator': 0xf59e0b,
-  'Developer': 0x6b7280,
+  General: 0x3b82f6,
+  Gaming: 0xef4444,
+  Moderator: 0xf59e0b,
+  Developer: 0x6b7280
 };
 
 export default class HelpCommand extends SlashCommand {
   constructor() {
-    super('help', 'View all available commands and how to get started', 'General');
+    super({
+      name: 'help',
+      description: 'View all available commands and how to get started',
+      category: 'General',
+      cooldown: 3,
+      isGlobalCommand: true
+    });
   }
 
-  public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
+  public async execute(
+    interaction: ChatInputCommandInteraction,
+    client: Client
+  ): Promise<void> {
     await interaction.deferReply();
-
-    const commands = SlashCommandHandler.getCache();
 
     // Group commands by category
     const categories = new Map<string, SlashCommand[]>();
 
-    for (const command of commands.values()) {
-      const cat = command.getCategory();
+    for (const command of SlashCommandHandler.cache.values()) {
       // Hide developer commands from regular users
-      if (cat === 'Developer') continue;
+      if (command.category === 'Developer') continue;
 
-      if (!categories.has(cat)) categories.set(cat, []);
-      categories.get(cat)!.push(command);
+      if (!categories.has(command.category))
+        categories.set(command.category, []);
+      categories.get(command.category)!.push(command);
     }
 
     const pages: EmbedBuilder[] = [];
@@ -44,16 +56,16 @@ export default class HelpCommand extends SlashCommand {
     // Page 1: Overview / Getting Started
     const overviewEmbed = new EmbedBuilder()
       .setColor(0x10b981)
-      .setTitle('⚔️ Dragon\'s Fall Online')
+      .setTitle("⚔️ Dragon's Fall Online")
       .setDescription(
         'A lightweight text-based MMORPG. Collect thousands of unique items, explore endless scenarios, and watch numbers go up.\n\n' +
-        '**Getting Started:**\n' +
-        '> 1. Run `/register` to create your character\n' +
-        '> 2. Use `/explore` to adventure and find loot\n' +
-        '> 3. Check `/inventory` to manage your gear\n' +
-        '> 4. View `/profile` to see your stats\n\n' +
-        '**Links:**\n' +
-        '> 🌐 [Play on Web](https://capi.gg/dfo) • 🗳️ [Vote on top.gg](https://top.gg) • 💬 [Discord Server](https://discord.gg/dfo)'
+          '**Getting Started:**\n' +
+          '> 1. Run `/register` to create your character\n' +
+          '> 2. Use `/explore` to adventure and find loot\n' +
+          '> 3. Check `/inventory` to manage your gear\n' +
+          '> 4. View `/profile` to see your stats\n\n' +
+          '**Links:**\n' +
+          '> 🌐 [Play on Web](https://capi.gg/dfo) • 🗳️ [Vote on top.gg](https://top.gg) • 💬 [Discord Server](https://discord.gg/dfo)'
       )
       .setThumbnail(client.user?.displayAvatarURL() ?? '');
 
@@ -66,7 +78,7 @@ export default class HelpCommand extends SlashCommand {
 
       let description = '';
       for (const cmd of cmds) {
-        description += `**\`/${cmd.getName()}\`** — ${cmd.getDescription()}\n`;
+        description += `**\`/${cmd.name}\`** — ${cmd.description}\n`;
       }
 
       const embed = new EmbedBuilder()
@@ -83,13 +95,5 @@ export default class HelpCommand extends SlashCommand {
       .setIdleTimeout(120_000); // 2 minutes for help browsing
 
     await paginator.start(interaction);
-  }
-
-  public isGlobalCommand(): boolean {
-    return true;
-  }
-
-  public cooldown(): number {
-    return 3;
   }
 }

@@ -1,33 +1,59 @@
 import {
-  ChatInputCommandInteraction, Client, EmbedBuilder, AttachmentBuilder,
-  ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
-} from "discord.js";
-import SlashCommand from "../structures/SlashCommand";
-import { IInventoryItem } from "../interfaces/IInventoryJSON";
-import { IPlayerJSON } from "../interfaces/IPlayerJSON";
-import PaginatorBuilder from "../utilities/PaginatorBuilder";
-import Routes from "../utilities/Routes";
-import { apiFetch } from "../utilities/ApiClient";
-import { formatError } from "../utilities/ErrorMessages";
-import ItemManager from "../managers/ItemManager";
-import ImageService from "../utilities/ImageService";
+  type ChatInputCommandInteraction,
+  type Client,
+  EmbedBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder
+} from 'discord.js';
+import SlashCommand from '../structures/SlashCommand';
+import { type IInventoryItem } from '../interfaces/IInventoryJSON';
+import { type IPlayerJSON } from '../interfaces/IPlayerJSON';
+import PaginatorBuilder from '../utilities/PaginatorBuilder';
+import * as Routes from '../utilities/Routes';
+import { apiFetch } from '../utilities/ApiClient';
+import { formatError } from '../utilities/ErrorMessages';
+import * as ItemManager from '../managers/ItemManager';
+import * as ImageService from '../utilities/ImageService';
 
 export default class InventoryCommand extends SlashCommand {
   constructor() {
-    super('inventory', 'View your inventory and manage items', 'General');
+    super({
+      name: 'inventory',
+      description: 'View your inventory and manage items',
+      category: 'General',
+      cooldown: 5,
+      isGlobalCommand: true
+    });
     // No options — the select menu handles item selection
   }
 
-  public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
+  public async execute(
+    interaction: ChatInputCommandInteraction,
+    client: Client
+  ): Promise<void> {
     await interaction.deferReply();
 
     const res = await apiFetch(Routes.inventory(interaction.user.id));
 
-    const { success, data, error }: { success: boolean, data: any, error?: string } = await res.json();
+    const {
+      success,
+      data,
+      error
+    }: { success: boolean; data: any; error?: string } = await res.json();
 
-    if (res.status === 400 || res.status === 401 || res.status === 404 || res.status === 500) {
-      await interaction.editReply({ content: formatError(error ?? 'Unknown error') });
+    if (
+      res.status === 400 ||
+      res.status === 401 ||
+      res.status === 404 ||
+      res.status === 500
+    ) {
+      await interaction.editReply({
+        content: formatError(error ?? 'Unknown error')
+      });
       return;
     }
 
@@ -35,7 +61,9 @@ export default class InventoryCommand extends SlashCommand {
     const player = data.player as IPlayerJSON;
 
     if (!inventory || inventory.length === 0) {
-      await interaction.editReply({ content: `🎒 **${interaction.user.username}**'s inventory is completely empty.` });
+      await interaction.editReply({
+        content: `🎒 **${interaction.user.username}**'s inventory is completely empty.`
+      });
       return;
     }
 
@@ -82,11 +110,15 @@ export default class InventoryCommand extends SlashCommand {
           .setMaxValues(1)
           .addOptions(selectOptions.slice(0, 25));
 
-        pageRows.push(new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(selectMenu));
+        pageRows.push(
+          new ActionRowBuilder<StringSelectMenuBuilder>().setComponents(
+            selectMenu
+          )
+        );
       }
 
       // === BULK ACTION BUTTONS ===
-      const eligibleCount = chunk.filter(inv => {
+      const eligibleCount = chunk.filter((inv) => {
         if (inv.isLocked) return false;
         const def = ItemManager.get(inv.itemId);
         if (!def || def.type === 'Consumable') return false;
@@ -107,7 +139,7 @@ export default class InventoryCommand extends SlashCommand {
             new ButtonBuilder()
               .setCustomId(`bulk_dismantle:${i}`)
               .setLabel(`🔥 Bulk Dismantle (${eligibleCount})`)
-              .setStyle(ButtonStyle.Danger),
+              .setStyle(ButtonStyle.Danger)
           )
         );
       }
@@ -124,7 +156,4 @@ export default class InventoryCommand extends SlashCommand {
 
     await paginator.start(interaction);
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
 }

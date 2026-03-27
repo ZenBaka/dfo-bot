@@ -1,17 +1,32 @@
-import { ButtonInteraction, Client, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextDisplayBuilder } from "discord.js";
-import Button from "../../structures/Button";
-import ItemManager from "../../managers/ItemManager";
-import { apiFetch } from "../../utilities/ApiClient";
-import Routes from "../../utilities/Routes";
-import type { IInventoryItem } from "../../interfaces/IInventoryJSON";
+import {
+  type ButtonInteraction,
+  type Client,
+  LabelBuilder,
+  MessageFlags,
+  ModalBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  TextDisplayBuilder
+} from 'discord.js';
+import Button from '../../structures/Button';
+import * as ItemManager from '../../managers/ItemManager';
+import { apiFetch } from '../../utilities/ApiClient';
+import * as Routes from '../../utilities/Routes';
+import type { IInventoryItem } from '../../interfaces/IInventoryJSON';
 
 const ITEMS_PER_PAGE = 15;
 
 export default class BulkCollectButton extends Button {
-  constructor() { super('bulk_collect'); }
+  constructor() {
+    super({ customId: 'bulk_collect', cooldown: 3, isAuthorOnly: true });
+  }
 
   // customId format: bulk_collect:<pageOffset>
-  public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
+  public async execute(
+    interaction: ButtonInteraction,
+    client: Client,
+    args?: string[] | null
+  ): Promise<void> {
     const pageOffset = parseInt(args?.[0] ?? '0', 10);
 
     const res = await apiFetch(Routes.inventory(interaction.user.id));
@@ -20,16 +35,20 @@ export default class BulkCollectButton extends Button {
     const inventory: IInventoryItem[] = data?.inventory || [];
 
     const chunk = inventory.slice(pageOffset, pageOffset + ITEMS_PER_PAGE);
-    const eligible = chunk.filter(inv => {
+    const eligible = chunk.filter((inv) => {
       if (inv.isLocked) return false;
-      if (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides) return false;
+      if (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides)
+        return false;
       const def = ItemManager.get(inv.itemId);
       if (!def || def.type === 'Consumable') return false;
       return true;
     });
 
     if (eligible.length === 0) {
-      await interaction.reply({ content: '❌ No eligible items to collect on this page.', flags: MessageFlags.Ephemeral});
+      await interaction.reply({
+        content: '❌ No eligible items to collect on this page.',
+        flags: MessageFlags.Ephemeral
+      });
       return;
     }
 
@@ -57,11 +76,14 @@ export default class BulkCollectButton extends Button {
 
     const selectLabel = new LabelBuilder()
       .setLabel('Select items to archive')
-      .setDescription('Selected items move from inventory to your collection book')
+      .setDescription(
+        'Selected items move from inventory to your collection book'
+      )
       .setStringSelectMenuComponent(selectMenu);
 
-    const infoText = new TextDisplayBuilder()
-      .setContent('-# ⚠️ THIS IS PERMANENT. Items are removed from your inventory and added to your Collection Book. Modified items will be skipped. This cannot be undone.');
+    const infoText = new TextDisplayBuilder().setContent(
+      '-# ⚠️ THIS IS PERMANENT. Items are removed from your inventory and added to your Collection Book. Modified items will be skipped. This cannot be undone.'
+    );
 
     const modal = new ModalBuilder()
       .setCustomId('bulk_collect_modal')
@@ -71,7 +93,4 @@ export default class BulkCollectButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -6,6 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "lint": "eslint --fix",
+    "prettier": "prettier **/*.ts --write",
     "build": "tsc && node -e \"const fs=require('fs'); ['commands', 'events', 'components/buttons', 'components/menus', 'components/modals'].forEach(d => fs.mkdirSync('./dist/' + d, { recursive: true }));\"",
     "start": "node dist/index.js"
   },
@@ -18,9 +20,15 @@
     "pino": "^10.2.1"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
     "pino-pretty": "^13.1.3",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"

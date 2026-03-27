@@ -13,22 +13,24 @@
    limitations under the License.
    */
 
-import logger, { flushAndClose } from "./utilities/Logger";
-import { Client, GatewayIntentBits } from "discord.js";
+import logger, { flushAndClose } from './utilities/Logger';
+import { Client, GatewayIntentBits } from 'discord.js';
 import 'dotenv/config';
-import EventHandler from "./handlers/EventHandler";
-import SlashCommandHandler from "./handlers/SlashCommandHandler";
-import ButtonHandler from "./handlers/ButtonHandler";
-import SelectMenuHandler from "./handlers/SelectMenuHandler";
-import ModalSubmitHandler from "./handlers/ModalSubmitHandler";
-import WorkerPool from "./utilities/WorkerPool";
-import PresenceManager from "./managers/PresenceManager";
+import * as SlashCommandHandler from './handlers/SlashCommandHandler';
+import * as ButtonHandler from './handlers/ButtonHandler';
+import * as SelectMenuHandler from './handlers/SelectMenuHandler';
+import * as ModalSubmitHandler from './handlers/ModalSubmitHandler';
+import * as WorkerPool from './utilities/WorkerPool';
+import * as PresenceManager from './managers/PresenceManager';
+import initializeEventHandler from './handlers/EventHandler';
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+});
 
-(async () => {
+(async (): Promise<void> => {
   try {
-    new EventHandler(client);
+    initializeEventHandler(client);
     SlashCommandHandler.load();
     ButtonHandler.load();
     SelectMenuHandler.load();
@@ -41,7 +43,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
   }
 })();
 
-async function shutdown(signal: string) {
+async function shutdown(signal: string): Promise<void> {
   logger.info(`[System] Received ${signal}. Starting shutdown...`);
 
   try {

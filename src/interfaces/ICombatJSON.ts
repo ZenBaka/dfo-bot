@@ -1,5 +1,5 @@
-import { IEnemyJSON } from "./IEnemyJSON";
-import { IItemJSON } from "./IItemJSON";
+import { type IEnemyJSON } from './IEnemyJSON';
+import { type IItemJSON } from './IItemJSON';
 
 export interface ICombatJSON {
   success: boolean;
@@ -15,4 +15,4 @@ export interface ICombatJSON {
     levelsGained: number;
   };
   error?: string;
-};
+}

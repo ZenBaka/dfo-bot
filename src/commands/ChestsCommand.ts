@@ -1,20 +1,35 @@
 import {
-  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle,
-  ChatInputCommandInteraction, Client, EmbedBuilder,
-} from "discord.js";
-import SlashCommand from "../structures/SlashCommand";
-import { apiFetch } from "../utilities/ApiClient";
-import { formatError } from "../utilities/ErrorMessages";
-import Routes from "../utilities/Routes";
-import ImageService from "../utilities/ImageService";
-import type { IChestSlot } from "../interfaces/IGameJSON";
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  type ChatInputCommandInteraction,
+  type Client,
+  EmbedBuilder
+} from 'discord.js';
+import SlashCommand from '../structures/SlashCommand';
+import { apiFetch } from '../utilities/ApiClient';
+import { formatError } from '../utilities/ErrorMessages';
+import * as Routes from '../utilities/Routes';
+import * as ImageService from '../utilities/ImageService';
+import type { IChestSlot } from '../interfaces/IGameJSON';
+import { chunkArray } from '../utilities/helpers';
 
 export default class ChestsCommand extends SlashCommand {
   constructor() {
-    super('chests', 'View and manage your chest vault', 'Gaming');
+    super({
+      name: 'chests',
+      description: 'View and manage your chest vault',
+      category: 'Gaming',
+      cooldown: 5,
+      isGlobalCommand: true
+    });
   }
 
-  public async execute(interaction: ChatInputCommandInteraction, client: Client): Promise<void> {
+  public async execute(
+    interaction: ChatInputCommandInteraction,
+    client: Client
+  ): Promise<void> {
     await interaction.deferReply();
     const discordId = interaction.user.id;
 
@@ -24,16 +39,22 @@ export default class ChestsCommand extends SlashCommand {
       const playerBody = await res.json();
 
       if (!res.ok) {
-        await interaction.editReply({ content: formatError(playerBody.error ?? 'Failed to load player') });
+        await interaction.editReply({
+          content: formatError(playerBody.error ?? 'Failed to load player')
+        });
         return;
       }
 
       // Fetch chest data via the chests endpoint (GET with discordId)
-      const chestRes = await apiFetch(`${Routes.chests()}?discordId=${discordId}`);
+      const chestRes = await apiFetch(
+        `${Routes.chests()}?discordId=${discordId}`
+      );
       const chestBody = await chestRes.json();
 
       if (!chestRes.ok) {
-        await interaction.editReply({ content: formatError(chestBody.error ?? 'Failed to load chests') });
+        await interaction.editReply({
+          content: formatError(chestBody.error ?? 'Failed to load chests')
+        });
         return;
       }
 
@@ -48,16 +69,22 @@ export default class ChestsCommand extends SlashCommand {
         maxSlots,
         divinePity,
         pityThreshold,
-        totalOpened,
+        totalOpened
       });
 
-      const attachment = new AttachmentBuilder(imageBuffer, { name: 'chests.png' });
-      const embed = new EmbedBuilder().setColor(0xeab308).setImage('attachment://chests.png');
+      const attachment = new AttachmentBuilder(imageBuffer, {
+        name: 'chests.png'
+      });
+      const embed = new EmbedBuilder()
+        .setColor(0xeab308)
+        .setImage('attachment://chests.png');
 
       const components: ActionRowBuilder<ButtonBuilder>[] = [];
 
       // Action buttons for each chest (max 2 rows of 4)
-      const actionable = chests.filter(c => c.status === 'ready' || c.status === 'locked');
+      const actionable = chests.filter(
+        (c) => c.status === 'ready' || c.status === 'locked'
+      );
       const chunks = chunkArray(actionable, 4);
 
       for (const chunk of chunks.slice(0, 2)) {
@@ -97,25 +124,20 @@ export default class ChestsCommand extends SlashCommand {
           new ButtonBuilder()
             .setCustomId('chest_buy:Rare')
             .setLabel('🔵 Buy Rare')
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Secondary)
         );
         components.push(shopRow);
       }
 
-      await interaction.editReply({ embeds: [embed], files: [attachment], components });
+      await interaction.editReply({
+        embeds: [embed],
+        files: [attachment],
+        components
+      });
     } catch (err: any) {
-      await interaction.editReply({ content: formatError(err.message, err.code) });
+      await interaction.editReply({
+        content: formatError(err.message, err.code)
+      });
     }
   }
-
-  public isGlobalCommand(): boolean { return true; }
-  public cooldown(): number { return 5; }
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
 }

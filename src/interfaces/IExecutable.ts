@@ -1,3 +1,3 @@
 export default interface IExecutable {
-  execute(...args: any[]): Promise<any>;
+  execute: (...args: any[]) => Promise<any>;
 }

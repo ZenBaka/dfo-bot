@@ -1,9 +1,9 @@
 // ========== TASKS ==========
 
 export interface ITaskJSON {
-  id: string;              // API returns `id`, not `taskId`
-  action: string;          // e.g. "EXPLORE_STEPS", "DEFEAT_ENEMIES"
-  label: string;           // e.g. "Explore 50 times" (was `description`)
+  id: string; // API returns `id`, not `taskId`
+  action: string; // e.g. "EXPLORE_STEPS", "DEFEAT_ENEMIES"
+  label: string; // e.g. "Explore 50 times" (was `description`)
   icon: string;
   target: number;
   progress: number;
@@ -15,8 +15,8 @@ export interface ITaskJSON {
     chestTier: string | null;
   };
   completed: boolean;
-  claimed: boolean;        // API returns `claimed`, not `isClaimed`
-  nextReset: string;       // ISO date string
+  claimed: boolean; // API returns `claimed`, not `isClaimed`
+  nextReset: string; // ISO date string
 }
 
 export interface ITasksResponse {
@@ -24,7 +24,7 @@ export interface ITasksResponse {
   tasks: ITaskJSON[];
   embers: number;
   resets: {
-    daily: string;         // ISO date strings, not numbers
+    daily: string; // ISO date strings, not numbers
     weekly: string;
     monthly: string;
   };
@@ -58,7 +58,7 @@ export interface IChestOpenResult {
   success: boolean;
   message: string;
   loot: {
-    items: Array<{ name: string; rarity: string; level: number; type: string }>;
+    items: { name: string; rarity: string; level: number; type: string }[];
     gold: number;
     embers: number;
     isPity: boolean;

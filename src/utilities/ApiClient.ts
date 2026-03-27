@@ -1,4 +1,4 @@
-import Routes from './Routes';
+import * as Routes from './Routes';
 import logger from './Logger';
 
 const DEFAULT_TIMEOUT = 10_000; // 10 seconds
@@ -27,7 +27,9 @@ class CircuitBreaker {
     this.failures++;
     if (this.failures >= CIRCUIT_BREAKER_THRESHOLD) {
       this.openUntil = Date.now() + CIRCUIT_BREAKER_COOLDOWN;
-      logger.warn(`[ApiClient] Circuit breaker OPEN — API unreachable after ${this.failures} failures. Retrying in ${CIRCUIT_BREAKER_COOLDOWN / 1000}s`);
+      logger.warn(
+        `[ApiClient] Circuit breaker OPEN — API unreachable after ${this.failures} failures. Retrying in ${CIRCUIT_BREAKER_COOLDOWN / 1000}s`
+      );
     }
   }
 }
@@ -38,9 +40,16 @@ const breaker = new CircuitBreaker();
  * Centralized API fetch wrapper.
  * Provides: default headers, request timeout, circuit breaker, structured error context.
  */
-export async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+export async function apiFetch(
+  url: string,
+  options?: RequestInit
+): Promise<Response> {
   if (breaker.isOpen()) {
-    throw new ApiError('API_UNAVAILABLE', 'The game server is temporarily unreachable. Please try again in a moment.', 503);
+    throw new ApiError(
+      'API_UNAVAILABLE',
+      'The game server is temporarily unreachable. Please try again in a moment.',
+      503
+    );
   }
 
   try {
@@ -48,12 +57,17 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
       ...options,
       headers: {
         ...Routes.HEADERS(),
-        ...options?.headers,
+        ...options?.headers
       },
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT)
     });
 
-    if (res.ok || res.status === 429 || res.status === 409 || res.status === 404) {
+    if (
+      res.ok ||
+      res.status === 429 ||
+      res.status === 409 ||
+      res.status === 404
+    ) {
       // These are "expected" statuses the bot knows how to handle
       breaker.recordSuccess();
     } else if (res.status >= 500) {
@@ -65,10 +79,18 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
     breaker.recordFailure();
 
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      throw new ApiError('API_TIMEOUT', 'The game server took too long to respond. Please try again.', 408);
+      throw new ApiError(
+        'API_TIMEOUT',
+        'The game server took too long to respond. Please try again.',
+        408
+      );
     }
 
-    throw new ApiError('API_NETWORK_ERROR', 'Could not reach the game server. Please try again later.', 503);
+    throw new ApiError(
+      'API_NETWORK_ERROR',
+      'Could not reach the game server. Please try again later.',
+      503
+    );
   }
 }
 

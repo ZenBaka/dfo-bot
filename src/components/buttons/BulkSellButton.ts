@@ -1,17 +1,32 @@
-import { ButtonInteraction, Client, LabelBuilder, MessageFlags, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextDisplayBuilder } from "discord.js";
-import Button from "../../structures/Button";
-import ItemManager from "../../managers/ItemManager";
-import { apiFetch } from "../../utilities/ApiClient";
-import Routes from "../../utilities/Routes";
-import type { IInventoryItem } from "../../interfaces/IInventoryJSON";
+import {
+  type ButtonInteraction,
+  type Client,
+  LabelBuilder,
+  MessageFlags,
+  ModalBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  TextDisplayBuilder
+} from 'discord.js';
+import Button from '../../structures/Button';
+import * as ItemManager from '../../managers/ItemManager';
+import { apiFetch } from '../../utilities/ApiClient';
+import * as Routes from '../../utilities/Routes';
+import type { IInventoryItem } from '../../interfaces/IInventoryJSON';
 
 const ITEMS_PER_PAGE = 15;
 
 export default class BulkSellButton extends Button {
-  constructor() { super('bulk_sell'); }
+  constructor() {
+    super({ customId: 'bulk_sell', cooldown: 3, isAuthorOnly: true });
+  }
 
   // customId format: bulk_sell:<pageOffset>
-  public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
+  public async execute(
+    interaction: ButtonInteraction,
+    client: Client,
+    args?: string[] | null
+  ): Promise<void> {
     const pageOffset = parseInt(args?.[0] ?? '0', 10);
 
     // Fetch inventory fresh from API
@@ -22,16 +37,20 @@ export default class BulkSellButton extends Button {
 
     // Get the page chunk and filter eligible items
     const chunk = inventory.slice(pageOffset, pageOffset + ITEMS_PER_PAGE);
-    const eligible = chunk.filter(inv => {
+    const eligible = chunk.filter((inv) => {
       if (inv.isLocked) return false;
-      if (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides) return false;
+      if (inv.enhanceLevel > 0 || inv.statOverrides || inv.affixOverrides)
+        return false;
       const def = ItemManager.get(inv.itemId);
       if (!def || def.type === 'Consumable') return false;
       return true;
     });
 
     if (eligible.length === 0) {
-      await interaction.reply({ content: '❌ No eligible items to sell on this page.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({
+        content: '❌ No eligible items to sell on this page.',
+        flags: MessageFlags.Ephemeral
+      });
       return;
     }
 
@@ -44,8 +63,10 @@ export default class BulkSellButton extends Button {
       options.push(
         new StringSelectMenuOptionBuilder()
           .setLabel(`${def.name} (x${inv.quantity})`)
-          .setDescription(`${def.rarity} ${def.type} • Sells for ${totalValue.toLocaleString()}g`)
-          .setValue(`${inv.itemId}-${inv.quantity}`)  // Short — no _id needed for bulk sell
+          .setDescription(
+            `${def.rarity} ${def.type} • Sells for ${totalValue.toLocaleString()}g`
+          )
+          .setValue(`${inv.itemId}-${inv.quantity}`) // Short — no _id needed for bulk sell
       );
     }
 
@@ -60,11 +81,14 @@ export default class BulkSellButton extends Button {
 
     const selectLabel = new LabelBuilder()
       .setLabel('Select items to sell')
-      .setDescription('All selected items will be sold for gold. Modified items are excluded.')
+      .setDescription(
+        'All selected items will be sold for gold. Modified items are excluded.'
+      )
       .setStringSelectMenuComponent(selectMenu);
 
-    const infoText = new TextDisplayBuilder()
-      .setContent('-# Locked, consumable, and modified (enhanced/reforged) items are excluded.');
+    const infoText = new TextDisplayBuilder().setContent(
+      '-# Locked, consumable, and modified (enhanced/reforged) items are excluded.'
+    );
 
     const modal = new ModalBuilder()
       .setCustomId('bulk_sell_modal')
@@ -74,7 +98,4 @@ export default class BulkSellButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

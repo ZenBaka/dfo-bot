@@ -1,11 +1,11 @@
-import { IEnemyJSON } from "./IEnemyJSON";
+import { type IEnemyJSON } from './IEnemyJSON';
 
 export type Privilege =
-    | 'Member'
-    | 'Donator'
-    | 'Moderator'
-    | 'Administrator'
-    | 'Developer';
+  | 'Member'
+  | 'Donator'
+  | 'Moderator'
+  | 'Administrator'
+  | 'Developer';
 
 export interface IPlayerJSON {
   id: string;
@@ -36,12 +36,12 @@ export interface IPlayerJSON {
   collections: {
     uniqueClaimed: number;
     totalClaimed: number;
-  }
+  };
   discordRoleData?: {
     accessToken: any;
     refreshToken: any;
     expiresAt: any;
-  }
+  };
   activeEncounter: IEnemyJSON | null;
   cooldowns: {
     step: Date;

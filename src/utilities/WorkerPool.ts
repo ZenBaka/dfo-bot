@@ -10,140 +10,155 @@ interface QueuedTask {
   reject: (reason: any) => void;
 }
 
-export default class WorkerPool {
-  private static workers: Worker[] = [];
-  private static available: Worker[] = [];
-  private static queue: QueuedTask[] = [];
-  private static isInitialized = false;
+export interface Stats {
+  total: number;
+  available: number;
+  queued: number;
+}
 
-  /**
-   * Spin up the pool. Call once at startup (e.g. in ClientReadyEvent).
-   * Defaults to (CPU cores - 1), minimum 2, capped at 8.
-   */
-  public static init(size?: number): void {
-    if (this.isInitialized) return;
+let workers: Worker[] = [];
+let available: Worker[] = [];
+let queue: QueuedTask[] = [];
+let isInitialized = false;
 
-    const coreCount = cpus().length;
-    const poolSize = size ?? Math.max(2, Math.min(coreCount - 1, 8));
+/**
+ * Spin up the pool. Call once at startup (e.g. in ClientReadyEvent).
+ * Defaults to (CPU cores - 1), minimum 2, capped at 8.
+ */
+export function init(size?: number): void {
+  if (isInitialized) return;
 
-    // Resolve to the compiled .js worker in production, or .ts in development
-    const isCompiled = __filename.endsWith('.js');
-    const workerFile = join(__dirname, isCompiled ? 'ImageWorker.js' : 'ImageWorker.ts');
+  const coreCount = cpus().length;
+  const poolSize = size ?? Math.max(2, Math.min(coreCount - 1, 8));
 
-    for (let i = 0; i < poolSize; i++) {
-      const worker = new Worker(workerFile, {
-        // If running raw TypeScript, we need ts-node to compile the worker file
-        execArgv: isCompiled ? [] : ['-r', 'ts-node/register'],
-      });
+  // Resolve to the compiled .js worker in production, or .ts in development
+  const isCompiled = __filename.endsWith('.js');
+  const workerFile = join(
+    __dirname,
+    isCompiled ? 'ImageWorker.js' : 'ImageWorker.ts'
+  );
 
-      worker.on('error', (err) => {
-        logger.error(err, `[WorkerPool] Worker ${i} encountered an error`);
-      });
+  for (let i = 0; i < poolSize; i++) {
+    const worker = new Worker(workerFile, {
+      // If running raw TypeScript, we need ts-node to compile the worker file
+      execArgv: isCompiled ? [] : ['-r', 'ts-node/register']
+    });
 
-      worker.on('exit', (code) => {
-        if (code !== 0) {
-          logger.error(`[WorkerPool] Worker ${i} exited with code ${code}`);
-        }
-      });
+    worker.on('error', (err) => {
+      logger.error(err, `[WorkerPool] Worker ${i} encountered an error`);
+    });
 
-      this.workers.push(worker);
-      this.available.push(worker);
-    }
-
-    this.isInitialized = true;
-    logger.info(`[WorkerPool] Initialized ${poolSize} workers (${coreCount} CPU cores detected)`);
-  }
-
-  /**
-   * Submit a rendering task to the pool.
-   * If a worker is free it runs immediately; otherwise it queues.
-   */
-  public static run(builderName: string, payload: any): Promise<Buffer> {
-    if (!this.isInitialized) {
-      throw new Error('[WorkerPool] Pool not initialized — call WorkerPool.init() first');
-    }
-
-    return new Promise<Buffer>((resolve, reject) => {
-      const task: QueuedTask = { builderName, payload, resolve, reject };
-      const worker = this.available.pop();
-
-      if (worker) {
-        this.execute(worker, task);
-      } else {
-        this.queue.push(task);
+    worker.on('exit', (code) => {
+      if (code !== 0) {
+        logger.error(`[WorkerPool] Worker ${i} exited with code ${code}`);
       }
     });
+
+    workers.push(worker);
+    available.push(worker);
   }
 
-  /**
-   * Send a task to a specific worker and listen for the result.
-   */
-  private static execute(worker: Worker, task: QueuedTask): void {
-    const onMessage = (result: { success: boolean; buffer?: ArrayBuffer; error?: string }) => {
-      // Clean up this specific listener
-      worker.off('message', onMessage);
-      worker.off('error', onError);
+  isInitialized = true;
+  logger.info(
+    `[WorkerPool] Initialized ${poolSize} workers (${coreCount} CPU cores detected)`
+  );
+}
 
-      // Return worker to the available pool
-      this.release(worker);
-
-      if (result.success && result.buffer) {
-        task.resolve(Buffer.from(result.buffer));
-      } else {
-        task.reject(new Error(result.error ?? 'Unknown worker error'));
-      }
-    };
-
-    const onError = (err: Error) => {
-      worker.off('message', onMessage);
-      worker.off('error', onError);
-
-      this.release(worker);
-      task.reject(err);
-    };
-
-    worker.on('message', onMessage);
-    worker.on('error', onError);
-
-    worker.postMessage({
-      builderName: task.builderName,
-      payload: task.payload,
-    });
+/**
+ * Submit a rendering task to the pool.
+ * If a worker is free it runs immediately; otherwise it queues.
+ */
+export async function run(builderName: string, payload: any): Promise<Buffer> {
+  if (!isInitialized) {
+    throw new Error(
+      '[WorkerPool] Pool not initialized — call WorkerPool.init() first'
+    );
   }
 
-  /**
-   * Return a worker to the pool and drain the queue if tasks are waiting.
-   */
-  private static release(worker: Worker): void {
-    const next = this.queue.shift();
-    if (next) {
-      this.execute(worker, next);
+  return new Promise<Buffer>((resolve, reject) => {
+    const task: QueuedTask = { builderName, payload, resolve, reject };
+    const worker = available.pop();
+
+    if (worker) {
+      execute(worker, task);
     } else {
-      this.available.push(worker);
+      queue.push(task);
     }
-  }
+  });
+}
 
-  /**
-   * Gracefully terminate all workers. Call during shutdown.
-   */
-  public static async shutdown(): Promise<void> {
-    const terminations = this.workers.map((w) => w.terminate());
-    await Promise.all(terminations);
-    this.workers = [];
-    this.available = [];
-    this.queue = [];
-    this.isInitialized = false;
-    logger.info('[WorkerPool] All workers terminated');
-  }
+/**
+ * Send a task to a specific worker and listen for the result.
+ */
+function execute(worker: Worker, task: QueuedTask): void {
+  const onMessage = (result: {
+    success: boolean;
+    buffer?: ArrayBuffer;
+    error?: string;
+  }): void => {
+    // Clean up this specific listener
+    worker.off('message', onMessage);
+    worker.off('error', onError);
 
-  /**
-   * Current diagnostics.
-   */
-  public static stats() {
-    return {
-      total: this.workers.length,
-      available: this.available.length,
-      queued: this.queue.length,
-    };
+    // Return worker to the available pool
+    release(worker);
+
+    if (result.success && result.buffer) {
+      task.resolve(Buffer.from(result.buffer));
+    } else {
+      task.reject(new Error(result.error ?? 'Unknown worker error'));
+    }
+  };
+
+  const onError = (err: Error): void => {
+    worker.off('message', onMessage);
+    worker.off('error', onError);
+
+    release(worker);
+    task.reject(err);
+  };
+
+  worker.on('message', onMessage);
+  worker.on('error', onError);
+
+  worker.postMessage({
+    builderName: task.builderName,
+    payload: task.payload
+  });
+}
+
+/**
+ * Return a worker to the pool and drain the queue if tasks are waiting.
+ */
+function release(worker: Worker): void {
+  const next = queue.shift();
+  if (next) {
+    execute(worker, next);
+  } else {
+    available.push(worker);
   }
+}
+
+/**
+ * Gracefully terminate all workers. Call during shutdown.
+ */
+export async function shutdown(): Promise<void> {
+  const terminations = workers.map((w) => w.terminate());
+  await Promise.all(terminations);
+  workers = [];
+  available = [];
+  queue = [];
+  isInitialized = false;
+  logger.info('[WorkerPool] All workers terminated');
+}
+
+/**
+ * Current diagnostics.
+ */
+export function stats(): Stats {
+  return {
+    total: workers.length,
+    available: available.length,
+    queued: queue.length
+  };
 }

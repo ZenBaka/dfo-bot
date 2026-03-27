@@ -1,10 +1,24 @@
-import { ButtonInteraction, Client, LabelBuilder, ModalBuilder, TextDisplayBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
-import Button from "../../structures/Button";
+import {
+  type ButtonInteraction,
+  type Client,
+  LabelBuilder,
+  ModalBuilder,
+  TextDisplayBuilder,
+  TextInputBuilder,
+  TextInputStyle
+} from 'discord.js';
+import Button from '../../structures/Button';
 
 export default class SkillPointsButton extends Button {
-  constructor() { super('skillpoints'); }
+  constructor() {
+    super({ customId: 'skillpoints', cooldown: 3, isAuthorOnly: true });
+  }
 
-  public async execute(interaction: ButtonInteraction, client: Client, args?: string[] | null): Promise<void> {
+  public async execute(
+    interaction: ButtonInteraction,
+    client: Client,
+    args?: string[] | null
+  ): Promise<void> {
     const availablePoints = parseInt(args?.[0] ?? '0', 10);
 
     const atkInput = new TextInputBuilder()
@@ -31,8 +45,9 @@ export default class SkillPointsButton extends Button {
       .setDescription('Increases your damage reduction per point')
       .setTextInputComponent(defInput);
 
-    const infoText = new TextDisplayBuilder()
-      .setContent(`-# You have **${availablePoints}** skill points available. This action is permanent.`);
+    const infoText = new TextDisplayBuilder().setContent(
+      `-# You have **${availablePoints}** skill points available. This action is permanent.`
+    );
 
     const modal = new ModalBuilder()
       .setCustomId('skillpoints_modal')
@@ -42,7 +57,4 @@ export default class SkillPointsButton extends Button {
 
     await interaction.showModal(modal);
   }
-
-  public isAuthorOnly(): boolean { return true; }
-  public cooldown(): number { return 3; }
 }

@@ -1,190 +1,200 @@
-export default class Routes {
-  public static HEADERS = () => ({
-    'Authorization': `Bearer ${process.env.BOT_TOKEN}`,
+export function HEADERS(): Record<string, string> {
+  return {
+    Authorization: `Bearer ${process.env.BOT_TOKEN}`,
     'Content-Type': 'application/json'
-  });
+  };
+}
 
-  // ========== PLAYER ==========
+// ========== PLAYER ==========
 
-  public static player(userId: string): string {
-    return `https://capi.gg/api/bot/player/${userId}`;
+export function player(userId: string): string {
+  return `https://capi.gg/api/bot/player/${userId}`;
+}
+
+export function registerPlayer(): string {
+  return 'https://capi.gg/api/bot/player/register';
+}
+
+// ========== INVENTORY ==========
+
+export function inventory(userId: string): string {
+  return `https://capi.gg/api/bot/player/inventory/${userId}/all`;
+}
+
+export function inventoryItem(userId: string, itemId: number): string {
+  return `https://capi.gg/api/bot/player/inventory/${userId}/${itemId}`;
+}
+
+// ========== ITEMS ==========
+
+export function item(itemId: number): string {
+  return `https://capi.gg/api/bot/items/${itemId}`;
+}
+
+export function items(): string {
+  return 'https://capi.gg/api/bot/items/all';
+}
+
+// ========== SCENARIOS ==========
+
+export function scenario(scenarioId: number): string {
+  return `https://capi.gg/api/bot/scenarios/${scenarioId}`;
+}
+
+export function scenarios(): string {
+  return 'https://capi.gg/api/bot/scenarios/all';
+}
+
+// ========== NPCS ==========
+
+export function npc(npcId: number): string {
+  return `https://capi.gg/api/bot/npcs/${npcId}`;
+}
+
+export function npcs(): string {
+  return `https://capi.gg/api/bot/npcs/all`;
+}
+
+// ========== INVENTORY ACTIONS ==========
+
+export function equip(): string {
+  return 'https://capi.gg/api/inventory/equip';
+}
+
+export function unequip(): string {
+  return 'https://capi.gg/api/inventory/unequip';
+}
+
+export function lock(): string {
+  return 'https://capi.gg/api/inventory/lock';
+}
+
+export function consume(): string {
+  return 'https://capi.gg/api/inventory/consume';
+}
+
+export function sell(): string {
+  return 'https://capi.gg/api/inventory/sell';
+}
+
+export function enhance(): string {
+  return 'https://capi.gg/api/inventory/enhance';
+}
+
+export function reforge(): string {
+  return 'https://capi.gg/api/inventory/reforge';
+}
+
+export function dismantle(): string {
+  return 'https://capi.gg/api/inventory/dismantle';
+}
+
+export function collectionAdd(): string {
+  return 'https://capi.gg/api/collection/add';
+}
+
+// ========== ADVENTURE ==========
+
+export function explore(): string {
+  return 'https://capi.gg/api/adventure/step';
+}
+
+export function combat(): string {
+  return 'https://capi.gg/api/adventure/combat';
+}
+
+export function rest(): string {
+  return 'https://capi.gg/api/adventure/rest';
+}
+
+export function travel(): string {
+  return 'https://capi.gg/api/adventure/travel';
+}
+
+// ========== TASKS ==========
+
+export function tasks(): string {
+  return 'https://capi.gg/api/tasks';
+}
+
+// ========== CHESTS ==========
+
+export function chests(): string {
+  return 'https://capi.gg/api/chests';
+}
+
+// ========== LEADERBOARD ==========
+
+export function leaderboard(stat: string): string {
+  return `https://capi.gg/api/bot/leaderboard?stat=${stat}`;
+}
+
+// ========== TELEMETRY ==========
+
+export function telemetry(): string {
+  return 'https://capi.gg/api/telemetry/db-stats';
+}
+
+// ========== MARKET ==========
+
+export function marketBrowse(
+  discordId: string,
+  params?: {
+    page?: number;
+    search?: string;
+    rarity?: string;
+    type?: string;
+    sort?: string;
   }
+): string {
+  const base = `https://capi.gg/api/market?discordId=${discordId}&limit=8`;
+  const qs = new URLSearchParams();
+  if (params?.page) qs.set('page', String(params.page));
+  if (params?.search) qs.set('search', params.search);
+  if (params?.rarity && params.rarity !== 'All')
+    qs.set('rarity', params.rarity);
+  if (params?.type && params.type !== 'All') qs.set('type', params.type);
+  if (params?.sort) qs.set('sort', params.sort);
+  const extra = qs.toString();
+  return extra ? `${base}&${extra}` : base;
+}
 
-  public static registerPlayer(): string {
-    return 'https://capi.gg/api/bot/player/register';
-  }
+export function marketMyListings(discordId: string, page: number = 1): string {
+  return `https://capi.gg/api/market?sellerId=${discordId}&discordId=${discordId}&limit=8&page=${page}`;
+}
 
-  // ========== INVENTORY ==========
+export function marketBuy(): string {
+  return 'https://capi.gg/api/market/buy';
+}
 
-  public static inventory(userId: string): string {
-    return `https://capi.gg/api/bot/player/inventory/${userId}/all`;
-  }
+export function marketList(): string {
+  return 'https://capi.gg/api/market/list';
+}
 
-  public static inventoryItem(userId: string, itemId: number) {
-    return `https://capi.gg/api/bot/player/inventory/${userId}/${itemId}`;
-  }
+export function marketCancel(): string {
+  return 'https://capi.gg/api/market/cancel';
+}
 
-  // ========== ITEMS ==========
+export function marketTrend(itemId: number): string {
+  return `https://capi.gg/api/market/trend?itemId=${itemId}`;
+}
 
-  public static item(itemId: number): string {
-    return `https://capi.gg/api/bot/items/${itemId}`;
-  }
+// ========== PROFILE ==========
 
-  public static items(): string {
-    return 'https://capi.gg/api/bot/items/all';
-  }
+export function allocate(): string {
+  return 'https://capi.gg/api/profile/allocate';
+}
 
-  // ========== SCENARIOS ==========
+// ========== BULK OPERATIONS ==========
 
-  public static scenario(scenarioId: number): string {
-    return `https://capi.gg/api/bot/scenarios/${scenarioId}`;
-  }
+export function bulkSell(): string {
+  return 'https://capi.gg/api/inventory/bulk-sell';
+}
 
-  public static scenarios(): string {
-    return 'https://capi.gg/api/bot/scenarios/all';
-  }
+export function bulkCollect(): string {
+  return 'https://capi.gg/api/collection/bulk-add';
+}
 
-  // ========== NPCS ==========
-
-  public static npc(npcId: number): string {
-    return `https://capi.gg/api/bot/npcs/${npcId}`;
-  }
-
-  public static npcs(): string {
-    return `https://capi.gg/api/bot/npcs/all`;
-  }
-
-  // ========== INVENTORY ACTIONS ==========
-
-  public static equip(): string {
-    return 'https://capi.gg/api/inventory/equip';
-  }
-
-  public static unequip(): string {
-    return 'https://capi.gg/api/inventory/unequip';
-  }
-
-  public static lock(): string {
-    return 'https://capi.gg/api/inventory/lock';
-  }
-
-  public static consume(): string {
-    return 'https://capi.gg/api/inventory/consume';
-  }
-
-  public static sell(): string {
-    return 'https://capi.gg/api/inventory/sell';
-  }
-
-  public static enhance(): string {
-    return 'https://capi.gg/api/inventory/enhance';
-  }
-
-  public static reforge(): string {
-    return 'https://capi.gg/api/inventory/reforge';
-  }
-
-  public static dismantle(): string {
-    return 'https://capi.gg/api/inventory/dismantle';
-  }
-
-  public static collectionAdd(): string {
-    return 'https://capi.gg/api/collection/add';
-  }
-
-  // ========== ADVENTURE ==========
-
-  public static explore(): string {
-    return 'https://capi.gg/api/adventure/step';
-  }
-
-  public static combat(): string {
-    return 'https://capi.gg/api/adventure/combat';
-  }
-
-  public static rest(): string {
-    return 'https://capi.gg/api/adventure/rest';
-  }
-
-  public static travel(): string {
-    return 'https://capi.gg/api/adventure/travel';
-  }
-
-  // ========== TASKS ==========
-
-  public static tasks(): string {
-    return 'https://capi.gg/api/tasks';
-  }
-
-  // ========== CHESTS ==========
-
-  public static chests(): string {
-    return 'https://capi.gg/api/chests';
-  }
-
-  // ========== LEADERBOARD ==========
-
-  public static leaderboard(stat: string): string {
-    return `https://capi.gg/api/bot/leaderboard?stat=${stat}`;
-  }
-
-  // ========== TELEMETRY ==========
-
-  public static telemetry(): string {
-    return 'https://capi.gg/api/telemetry/db-stats';
-  }
-
-  // ========== MARKET ==========
-
-  public static marketBrowse(discordId: string, params?: { page?: number, search?: string, rarity?: string, type?: string, sort?: string }): string {
-    const base = `https://capi.gg/api/market?discordId=${discordId}&limit=8`;
-    const qs = new URLSearchParams();
-    if (params?.page) qs.set('page', String(params.page));
-    if (params?.search) qs.set('search', params.search);
-    if (params?.rarity && params.rarity !== 'All') qs.set('rarity', params.rarity);
-    if (params?.type && params.type !== 'All') qs.set('type', params.type);
-    if (params?.sort) qs.set('sort', params.sort);
-    const extra = qs.toString();
-    return extra ? `${base}&${extra}` : base;
-  }
-
-  public static marketMyListings(discordId: string, page: number = 1): string {
-    return `https://capi.gg/api/market?sellerId=${discordId}&discordId=${discordId}&limit=8&page=${page}`;
-  }
-
-  public static marketBuy(): string {
-    return 'https://capi.gg/api/market/buy';
-  }
-
-  public static marketList(): string {
-    return 'https://capi.gg/api/market/list';
-  }
-
-  public static marketCancel(): string {
-    return 'https://capi.gg/api/market/cancel';
-  }
-
-  public static marketTrend(itemId: number): string {
-    return `https://capi.gg/api/market/trend?itemId=${itemId}`;
-  }
-
-  // ========== PROFILE ==========
-
-  public static allocate(): string {
-    return 'https://capi.gg/api/profile/allocate';
-  }
-
-  // ========== BULK OPERATIONS ==========
-
-  public static bulkSell(): string {
-    return 'https://capi.gg/api/inventory/bulk-sell';
-  }
-
-  public static bulkCollect(): string {
-    return 'https://capi.gg/api/collection/bulk-add';
-  }
-
-  public static bulkDismantle(): string {
-    return 'https://capi.gg/api/inventory/bulk-dismantle';
-  }
+export function bulkDismantle(): string {
+  return 'https://capi.gg/api/inventory/bulk-dismantle';
 }

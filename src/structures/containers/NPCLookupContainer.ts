@@ -1,5 +1,5 @@
-import { ContainerBuilder } from "discord.js";
-import { INPCJSON } from "../../interfaces/INPCJSON";
+import { ContainerBuilder } from 'discord.js';
+import { type INPCJSON } from '../../interfaces/INPCJSON';
 
 export default class NPCLookupContainer {
   private data: INPCJSON;
@@ -12,10 +12,8 @@ export default class NPCLookupContainer {
     const container = new ContainerBuilder();
 
     container.addTextDisplayComponents(
-      (textDisplay) =>
-        textDisplay.setContent(`## 💀 (ID: ${this.data.id}) ${this.data.name}`),
-      (textDisplay) =>
-        textDisplay.setContent(this.data.description)
+      (textDisplay) => textDisplay.setContent(`## 💀 (ID: ${this.data.id}) ${this.data.name}`),
+      (textDisplay) => textDisplay.setContent(this.data.description)
     );
 
     return container;

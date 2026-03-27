@@ -3,17 +3,18 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
-  CommandInteraction,
-  MessageComponentInteraction,
+  type CommandInteraction,
+  type MessageComponentInteraction,
   ComponentType,
-  AttachmentBuilder,
-  MessageActionRowComponentBuilder
+  type AttachmentBuilder,
+  type MessageActionRowComponentBuilder
 } from 'discord.js';
 
 export default class PaginatorBuilder {
   private pages: EmbedBuilder[] = [];
   private files: AttachmentBuilder[] = [];
-  private extraRows: ActionRowBuilder<MessageActionRowComponentBuilder>[][] = [];
+  private extraRows: ActionRowBuilder<MessageActionRowComponentBuilder>[][] =
+    [];
   private idleTimeout: number = 60000;
   private targetUserId: string | null = null;
   private isEphemeral: boolean = false;
@@ -38,7 +39,9 @@ export default class PaginatorBuilder {
    * Indexed per page — extraRows[0] = rows for page 0, etc.
    * Discord max 5 rows total; pagination takes 1, so up to 4 extra per page.
    */
-  public setExtraRows(rows: ActionRowBuilder<MessageActionRowComponentBuilder>[][]): this {
+  public setExtraRows(
+    rows: ActionRowBuilder<MessageActionRowComponentBuilder>[][]
+  ): this {
     this.extraRows = rows;
     return this;
   }
@@ -58,19 +61,35 @@ export default class PaginatorBuilder {
     return this;
   }
 
-  public async start(interaction: CommandInteraction | MessageComponentInteraction): Promise<void> {
+  public async start(
+    interaction: CommandInteraction | MessageComponentInteraction
+  ): Promise<void> {
     if (this.pages.length === 0) {
-      throw new Error('[PaginatorBuilder] Cannot start a paginator with 0 pages.');
+      throw new Error(
+        '[PaginatorBuilder] Cannot start a paginator with 0 pages.'
+      );
     }
 
     let currentPage = 0;
 
-    const firstBtn = new ButtonBuilder().setCustomId('page_first').setLabel('⏪').setStyle(ButtonStyle.Secondary);
-    const prevBtn = new ButtonBuilder().setCustomId('page_prev').setLabel('◀').setStyle(ButtonStyle.Primary);
-    const nextBtn = new ButtonBuilder().setCustomId('page_next').setLabel('▶').setStyle(ButtonStyle.Primary);
-    const lastBtn = new ButtonBuilder().setCustomId('page_last').setLabel('⏩').setStyle(ButtonStyle.Secondary);
+    const firstBtn = new ButtonBuilder()
+      .setCustomId('page_first')
+      .setLabel('⏪')
+      .setStyle(ButtonStyle.Secondary);
+    const prevBtn = new ButtonBuilder()
+      .setCustomId('page_prev')
+      .setLabel('◀')
+      .setStyle(ButtonStyle.Primary);
+    const nextBtn = new ButtonBuilder()
+      .setCustomId('page_next')
+      .setLabel('▶')
+      .setStyle(ButtonStyle.Primary);
+    const lastBtn = new ButtonBuilder()
+      .setCustomId('page_last')
+      .setLabel('⏩')
+      .setStyle(ButtonStyle.Secondary);
 
-    const getNavRow = (index: number) => {
+    const getNavRow = (index: number): ActionRowBuilder<ButtonBuilder> => {
       return new ActionRowBuilder<ButtonBuilder>().addComponents(
         firstBtn.setDisabled(index === 0),
         prevBtn.setDisabled(index === 0),
@@ -79,7 +98,9 @@ export default class PaginatorBuilder {
       );
     };
 
-    const getComponents = (index: number): ActionRowBuilder<MessageActionRowComponentBuilder>[] => {
+    const getComponents = (
+      index: number
+    ): ActionRowBuilder<MessageActionRowComponentBuilder>[] => {
       const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
       const pageExtras = this.extraRows[index] ?? [];
       rows.push(...pageExtras);
@@ -87,12 +108,12 @@ export default class PaginatorBuilder {
       return rows.slice(0, 5);
     };
 
-    const getEmbed = (index: number) => {
+    const getEmbed = (index: number): EmbedBuilder => {
       const originalEmbed = this.pages[index];
       const embed = EmbedBuilder.from(originalEmbed);
       const currentFooter = originalEmbed.data.footer?.text || '';
-      return embed.setFooter({ 
-        text: (currentFooter ? `${currentFooter} | Page ${index + 1} of ${this.pages.length}` : `Page ${index + 1} of ${this.pages.length}`) + ' | ⚔️ DFO Cross-Platform',
+      return embed.setFooter({
+        text: `${currentFooter ? `${currentFooter} | Page ${index + 1} of ${this.pages.length}` : `Page ${index + 1} of ${this.pages.length}`} | ⚔️ DFO Cross-Platform`,
         iconURL: originalEmbed.data.footer?.icon_url
       });
     };
@@ -120,7 +141,10 @@ export default class PaginatorBuilder {
       filter: (i) => {
         if (!i.customId.startsWith('page_')) return false;
         if (this.targetUserId && i.user.id !== this.targetUserId) {
-          i.reply({ content: 'You cannot use these buttons.', ephemeral: true });
+          i.reply({
+            content: 'You cannot use these buttons.',
+            ephemeral: true
+          });
           return false;
         }
         return true;
@@ -130,22 +154,33 @@ export default class PaginatorBuilder {
     collector.on('collect', async (i) => {
       collector.resetTimer();
       switch (i.customId) {
-        case 'page_first': currentPage = 0; break;
-        case 'page_prev': currentPage = Math.max(0, currentPage - 1); break;
-        case 'page_next': currentPage = Math.min(this.pages.length - 1, currentPage + 1); break;
-        case 'page_last': currentPage = this.pages.length - 1; break;
+      case 'page_first':
+        currentPage = 0;
+        break;
+      case 'page_prev':
+        currentPage = Math.max(0, currentPage - 1);
+        break;
+      case 'page_next':
+        currentPage = Math.min(this.pages.length - 1, currentPage + 1);
+        break;
+      case 'page_last':
+        currentPage = this.pages.length - 1;
+        break;
       }
       await i.update({
         embeds: [getEmbed(currentPage)],
         components: getComponents(currentPage),
-        files: this.files.length > 0 ? [this.files[currentPage]] : [] 
+        files: this.files.length > 0 ? [this.files[currentPage]] : []
       });
     });
 
     collector.on('end', async () => {
       const finalComponents = getComponents(currentPage);
-      finalComponents.forEach(row => row.components.forEach(c => c.setDisabled(true)));
-      try { await interaction.editReply({ components: finalComponents }); } catch (e) {}
+      finalComponents.forEach((row) => row.components.forEach((c) => c.setDisabled(true))
+      );
+      try {
+        await interaction.editReply({ components: finalComponents });
+      } catch (e) {}
     });
   }
 }

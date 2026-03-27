@@ -1,7 +1,13 @@
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { ICombatJSON } from '../interfaces/ICombatJSON';
-import { IStepJSON } from '../interfaces/IStepJSON';
-import ImageService from './ImageService';
+import {
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder
+} from 'discord.js';
+import { type ICombatJSON } from '../interfaces/ICombatJSON';
+import { type IStepJSON } from '../interfaces/IStepJSON';
+import * as ImageService from './ImageService';
 
 export interface CombatResponse {
   embeds: EmbedBuilder[];
@@ -15,9 +21,13 @@ export interface CombatResponse {
  *
  * Single source of truth for the combat UI — change it here, changes everywhere.
  */
-export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promise<CombatResponse> {
+export async function buildCombatResponse(
+  data: ICombatJSON | IStepJSON
+): Promise<CombatResponse> {
   const imageBuffer = await ImageService.adventure(data);
-  const attachment = new AttachmentBuilder(imageBuffer, { name: 'adventure.png' });
+  const attachment = new AttachmentBuilder(imageBuffer, {
+    name: 'adventure.png'
+  });
 
   const hasEnemy = !!(data as any).enemy;
   const embed = new EmbedBuilder()
@@ -32,8 +42,7 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
   const playerStats = isStepData.playerStats;
 
   const showCombatButtons =
-    (isCombatData.combatEnded === false) ||
-    (isStepData.combatTrigger === true);
+    isCombatData.combatEnded === false || isStepData.combatTrigger === true;
 
   if (showCombatButtons) {
     const row = new ActionRowBuilder<ButtonBuilder>().setComponents(
@@ -44,7 +53,7 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
       new ButtonBuilder()
         .setCustomId('embedFlee')
         .setLabel('Flee')
-        .setStyle(ButtonStyle.Secondary),
+        .setStyle(ButtonStyle.Secondary)
     );
     components.push(row);
   } else {
@@ -65,7 +74,11 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
     }
 
     // Rest button if HP < max and not dead
-    if (playerStats && playerStats.hp > 0 && playerStats.hp < playerStats.maxHp) {
+    if (
+      playerStats &&
+      playerStats.hp > 0 &&
+      playerStats.hp < playerStats.maxHp
+    ) {
       actionRow.addComponents(
         new ButtonBuilder()
           .setCustomId('rest')
@@ -97,7 +110,9 @@ export async function buildCombatResponse(data: ICombatJSON | IStepJSON): Promis
   }
 
   if (rewards?.chestDrop) {
-    descParts.push(`📦 Found a **${rewards.chestDrop} Chest** while exploring!`);
+    descParts.push(
+      `📦 Found a **${rewards.chestDrop} Chest** while exploring!`
+    );
   }
 
   if (descParts.length > 0) {
